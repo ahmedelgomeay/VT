@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VOIS Test Data Extension",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A Chrome extension to manage test data for VOIS.",
   "permissions": [
     "cookies",
