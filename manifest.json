@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "VOIS Test Data Extension",
+  "version": "1.0.0",
+  "description": "A Chrome extension to manage test data for VOIS.",
+  "permissions": [
+    "cookies",
+    "storage",
+    "scripting",
+    "activeTab"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "src/features/testDataManager/testDataManager.html"
+  },
+  "icons": {
+    "16": "src/assets/icons/icon-16.png",
+    "48": "src/assets/icons/icon-48.png",
+    "128": "src/assets/icons/icon-128.png"
+  }
+}

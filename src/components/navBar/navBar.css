@@ -1,0 +1,139 @@
+/**
+ * Navbar Styles
+ * 1. Container
+ * 2. Main Navbar
+ * 3. Navigation Items
+ * 4. Hover Effects
+ * 5. Animations
+ */
+
+/* ========================================
+   1. Container Styles
+   ======================================== */
+.navbar-container {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 40px;  /* Hoverable area width */
+  height: 110px;  /* Updated height for 1 item */
+  z-index: 100;
+}
+
+/* Show navbar on hover */
+.navbar-container:hover .navbar {
+  left: 0;  /* Slide into view */
+}
+
+/* ========================================
+   2. Main Navbar Styles
+   ======================================== */
+.navbar {
+  /* Positioning */
+  position: absolute;
+  left: -60px;  /* Hidden off-screen by default */
+  top: 0;
+  width: 60px;
+  height: 100%;
+
+  /* Visual Styles */
+  background: linear-gradient(180deg, #8e1d37 0%, #661429 100%);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-top-right-radius: 24px;
+  border-bottom-right-radius: 24px;
+  box-shadow: 
+    2px 0 10px rgba(0, 0, 0, 0.2),
+    inset -1px 0 2px rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+
+  /* Layout */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px 0;
+
+  /* Animation */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========================================
+   3. Navigation Item Styles
+   ======================================== */
+.nav-item {
+  /* Layout */
+  margin: 5px 0;
+  padding: 10px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* Visual */
+  border-radius: 8px;
+  cursor: pointer;
+
+  /* Animation */
+  transition: background-color 0.3s;
+}
+
+.nav-item img {
+  width: 32px;
+  height: 32px;
+}
+
+/* ========================================
+   4. Hover Effects
+   ======================================== */
+.nav-item.active,
+.nav-item:hover {
+  background: linear-gradient(135deg, #661429, #4a0f1e);
+}
+
+.nav-item:hover img {
+  animation: pulse 2s infinite;
+  transform-origin: center;
+}
+
+/* Dark mode adjustments */
+body.dark-mode .navbar {
+  background: linear-gradient(180deg, #661429 0%, #4a0f1e 100%);
+}
+
+body.dark-mode .nav-item.active,
+body.dark-mode .nav-item:hover {
+  background: linear-gradient(135deg, #4a0f1e, #330a15);
+}
+
+/* ========================================
+   5. Animations
+   ======================================== */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Add to existing navBar.css file */
+.navbar .nav-item i.fas {
+  font-size: 24px;
+  color: #0C314E;
+  transition: color 0.3s ease;
+}
+
+.navbar .nav-item:hover i.fas {
+  color: #41C488;
+}
+
+body.dark-mode .navbar .nav-item i.fas {
+  color: #e0e0e0;
+}
+
+body.dark-mode .navbar .nav-item:hover i.fas {
+  color: #41C488;
+}

@@ -1,0 +1,18 @@
+/* Cookies Manager Button Styles */
+#clearCookiesBtn {
+    color: #F79009;
+}
+
+#clearCookiesBtn:hover {
+    background: rgba(247, 144, 9, 0.1);
+}
+
+/* Dark mode styles */
+body.dark-mode #clearCookiesBtn {
+    color: #F79009;
+    text-shadow: 0 0 10px rgba(247, 144, 9, 0.3);
+}
+
+body.dark-mode #clearCookiesBtn:hover {
+    background: rgba(247, 144, 9, 0.15);
+} 

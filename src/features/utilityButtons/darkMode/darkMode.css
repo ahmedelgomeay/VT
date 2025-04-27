@@ -1,0 +1,203 @@
+/* Dark mode toggle button */
+#darkModeToggle {
+    color: #fff;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    font-size: 24px;
+}
+
+#darkModeToggle:hover {
+    background: rgba(247, 144, 9, 0.15);
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.25);
+}
+
+#darkModeToggle:active {
+    transform: scale(0.95);
+}
+
+/* Dark mode styles */
+body.dark-mode {
+    background-color: #1a1a1a;
+}
+
+/* Remove conflicting container styles that override our frosted glass effect */
+/* body.dark-mode .container {
+    background: rgba(40, 44, 52, 0.95);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+} */
+
+body.dark-mode h2 {
+    color: #fff;
+}
+
+body.dark-mode input {
+    background-color: #454545;
+    border-color: #4a4a4a;
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-mode input::placeholder {
+    color: #a0a0a0;
+    opacity: 0.8;
+}
+
+body.dark-mode input:hover {
+    transform: translateY(-2px);
+    border-color: rgba(247, 144, 9, 0.4);
+    box-shadow: 0 6px 20px rgba(247, 144, 9, 0.15);
+}
+
+body.dark-mode input:focus {
+    border-color: #F79009;
+    background-color: #333333;
+    box-shadow: 0 8px 25px rgba(247, 144, 9, 0.25);
+    color: #ffffff;
+}
+
+body.dark-mode input:focus::placeholder {
+    opacity: 0.5;
+    color: #a0a0a0;
+}
+
+body.dark-mode input.invalid {
+    border-color: #f44336 !important;
+    box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+    animation: darkModeGlowError 2s ease-in-out infinite !important;
+}
+
+body.dark-mode input.invalid:focus {
+    border-color: #f44336 !important;
+    background-color: rgba(244, 67, 54, 0.1) !important;
+}
+
+body.dark-mode input.invalid::placeholder {
+    color: rgba(244, 67, 54, 0.8) !important;
+    opacity: 0.9;
+}
+
+body.dark-mode #searchBtn {
+    background: linear-gradient(135deg, #2d8b60, #36D179);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode #searchBtn:hover {
+    background: linear-gradient(135deg, #36D179, #2d8b60);
+}
+
+body.dark-mode #clearBtn {
+    background: linear-gradient(135deg, #e53935, #f44336);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode #clearBtn:hover {
+    background: linear-gradient(135deg, #f44336, #e53935);
+}
+
+body.dark-mode .result-item strong {
+    color: #F79009;
+    text-shadow: 0 0 10px rgba(247, 144, 9, 0.3);
+}
+
+body.dark-mode .result-item p {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+body.dark-mode .copy-btn {
+    background: linear-gradient(135deg, #2d8b60, #36D179);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .copy-btn:hover {
+    background: linear-gradient(135deg, #36D179, #2d8b60);
+    box-shadow: 0 4px 12px rgba(54, 209, 121, 0.3);
+}
+
+body.dark-mode .results.error {
+    color: #f44336;
+    text-shadow: 0 0 10px rgba(244, 67, 54, 0.3);
+}
+
+/* Dark mode environment select styles */
+body.dark-mode .env-select {
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+body.dark-mode .env-select:hover,
+body.dark-mode .env-select:focus {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .env-select option {
+    background-color: #2c3e50 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .env-select.dev-selected {
+    background: linear-gradient(135deg, #2d8b60, #36D179, #2d8b60) !important;
+    background-size: 200% 100% !important;
+    animation: gradientShift 3s ease infinite !important;
+    box-shadow: 0 4px 15px rgba(45, 139, 96, 0.3);
+}
+
+body.dark-mode .env-select.testing-selected {
+    background: linear-gradient(135deg, #b38939, #EFC050, #b38939) !important;
+    background-size: 200% 100% !important;
+    animation: gradientShift 3s ease infinite !important;
+    box-shadow: 0 4px 15px rgba(179, 137, 57, 0.3);
+}
+
+body.dark-mode .env-select.staging-selected {
+    background: linear-gradient(135deg, #8e1d37, #BB2649, #8e1d37) !important;
+    background-size: 200% 100% !important;
+    animation: gradientShift 3s ease infinite !important;
+    box-shadow: 0 4px 15px rgba(142, 29, 55, 0.3);
+}
+
+body.dark-mode .env-select.production-selected {
+    background: linear-gradient(135deg, #5e2f9e, #7843c4, #5e2f9e) !important;
+    background-size: 200% 100% !important;
+    animation: gradientShift 3s ease infinite !important;
+    box-shadow: 0 4px 15px rgba(94, 47, 158, 0.3);
+}
+
+body.dark-mode #darkModeToggle {
+    color: rgba(245, 223, 77, 1);
+    text-shadow: 0 0 10px rgba(247, 144, 9, 0.3);
+    font-size: 24px;
+}
+
+body.dark-mode #darkModeToggle:hover {
+    background: rgba(247, 144, 9, 0.15);
+    box-shadow: 0 0 20px rgba(247, 144, 9, 0.4);
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+@keyframes darkModeGlowError {
+    0% {
+        box-shadow: 0 0 5px rgba(244, 67, 54, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 20px rgba(244, 67, 54, 0.8),
+                    0 0 30px rgba(244, 67, 54, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 5px rgba(244, 67, 54, 0.3);
+    }
+}
+
+/* Tooltip styles */
+#darkModeToggle .tooltip {
+    margin-right: 10px;
+}
+
+body.dark-mode #darkModeToggle .tooltip {
+    background-color: rgba(20, 20, 20, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+} 

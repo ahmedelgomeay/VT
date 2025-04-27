@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nawy CRM Test Data</title>
+  <link rel="stylesheet" href="testDataManager.css">
+  <link rel="stylesheet" href="../../components/navBar/navBar.css">
+  <link rel="stylesheet" href="../../components/footer/footer.css">
+  <link rel="stylesheet" href="../utilityButtons/darkMode/darkMode.css">
+  <link rel="stylesheet" href="../utilityButtons/cookiesManager/cookiesManager.css">
+  <link rel="stylesheet" href="../utilityButtons/localStorageManager/localStorageManager.css">
+  <link rel="stylesheet" href="../utilityButtons/commonUtilityButtons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="utility-buttons">
+    <button id="darkModeToggle" class="utility-button">
+      <i class="fas fa-moon"></i>
+      <span class="tooltip">Dark Mode</span>
+    </button>
+    <button id="clearCookiesBtn" class="utility-button">
+      <i class="fas fa-cookie-bite"></i>
+      <span class="tooltip">Clear Cookies</span>
+    </button>
+    <button id="clearLocalStorageBtn" class="utility-button">
+      <i class="fas fa-database"></i>
+      <span class="tooltip">Clear Local Storage</span>
+    </button>
+  </div>
+
+  <div id="navbar-container"></div> <!-- Placeholder for Navbar -->
+
+  <div class="container">
+    <img src="../../assets/images/VOIS-logo.png" 
+         alt="VOIS Logo" 
+         class="header-image">
+    <h2>Test Data Manager</h2>
+    <div class="env-select-container">
+        <select id="environmentSelect" class="env-select">
+            <option value="Dev">Dev</option>
+            <option value="Testing">Testing</option>
+            <option value="Staging">Staging</option>
+            <option value="Production">Production</option>
+        </select>
+        <span class="env-tooltip">Select Environment</span>
+    </div>
+    <input type="text" id="searchBox" placeholder="Enter keyword...">
+    <div class="button-group">
+      <button id="searchBtn">Search</button>
+      <button id="clearBtn">Clear</button>
+    </div>
+    <div id="results" class="results"></div>
+  </div>
+  <div id="footer-container"></div>
+
+  <script type="module" src="TestDataManager.js" defer></script>
+  <script type="module" src="../../components/navBar/navBar.js" defer></script>
+  <script type="module" src="../../components/footer/footer.js" defer></script>
+  <script type="module" src="../../utils/ToastManager.js" defer></script>
+  <script type="module" src="../utilityButtons/cookiesManager/CookiesManager.js" defer></script>
+</body>
+</html>

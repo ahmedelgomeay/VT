@@ -1,0 +1,22 @@
+.footer {
+  text-align: center;
+  padding: 10px 0;
+  background-color: #8e1d37;
+  color: white;
+  width: 100%;
+  font-size: 12px;
+  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.footer p {
+  margin: 0;
+}
+
+body.dark-mode .footer {
+  background-color: #661429;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+} 

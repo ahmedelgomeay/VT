@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSON Schema Generator</title>
+  <link rel="stylesheet" href="jsonSchemaGenerator.css">
+  <link rel="stylesheet" href="../../components/navBar/navBar.css">
+  <link rel="stylesheet" href="../../components/footer/footer.css">
+  <link rel="stylesheet" href="../utilityButtons/darkMode/darkMode.css">
+  <link rel="stylesheet" href="../utilityButtons/commonUtilityButtons.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+  <div class="utility-buttons">
+    <button id="darkModeToggle" class="utility-button">
+      <i class="fas fa-moon"></i>
+      <span class="tooltip">Dark Mode</span>
+    </button>
+  </div>
+
+  <div id="navbar-container"></div> <!-- Placeholder for Navbar -->
+
+  <div class="container">
+    <img src="../../assets/images/VOIS-logo.png" 
+         data-dark-src="../../assets/images/nawy-logo-white.png" 
+         alt="VOIS Logo" 
+         class="header-image">
+    <h2>JSON Schema Generator</h2>
+    
+    <div class="editor-container">
+      <div class="input-section">
+        <h3>Input JSON</h3>
+        <textarea id="json-input-gen" placeholder="Paste your JSON here..."></textarea>
+        
+        <div class="buttons-wrapper">
+          <div class="input-buttons">
+            <button id="generate-btn" class="btn primary-btn">
+              <i class="fas fa-wand-magic-sparkles"></i> Generate Schema
+            </button>
+            <button id="clear-json-gen" class="btn secondary-btn clear-btn">
+              <i class="fas fa-trash"></i> Clear
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="output-section">
+        <h3>Generated Schema</h3>
+        <pre id="schema-output" class="output-area">Your schema will appear here...</pre>
+        
+        <div class="buttons-wrapper">
+          <div class="output-buttons">
+            <button id="copy-schema" class="btn primary-btn">
+              <i class="fas fa-copy"></i> Copy
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="toast-container" class="toast-container"></div>
+  <div id="footer-container"></div>
+
+  <script type="module" src="JsonSchemaGenerator.js" defer></script>
+  <script type="module" src="../../components/navBar/navBar.js" defer></script>
+  <script type="module" src="../../components/footer/footer.js" defer></script>
+  <script type="module" src="../../utils/ToastManager.js" defer></script>
+</body>
+</html> 

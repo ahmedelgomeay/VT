@@ -1,0 +1,662 @@
+/**
+ * JSON Schema Generator CSS
+ * Table of Contents:
+ * 1. Global Styles
+ * 2. Container Layout
+ * 3. Header Elements
+ * 4. Editor Components
+ * 5. Text Areas & Input Elements
+ * 6. Button Styles
+ * 7. Output Display
+ * 8. Syntax Highlighting
+ * 9. Toast Notifications
+ * 10. Dark Mode Styles
+ * 11. Animations
+ * 12. Media Queries
+ */
+
+/*======================
+  1. Global Styles
+=======================*/
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 20px;
+  background-color: rgba(12, 49, 78, 1);
+  width: 650px;
+  min-height: 600px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  position: relative;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background-image: url("../../assets/images/background-image.jpg");
+  background-repeat: repeat;
+  animation: backgroundMove 60s linear infinite;
+  z-index: -1;
+  opacity: 0.8;
+}
+
+/*======================
+  2. Container Layout
+=======================*/
+.container {
+  max-width: 100%;
+  min-width: 490px;
+  min-height: 300px;
+  margin: 0 auto;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  padding-bottom: 35px;
+}
+
+/*======================
+  3. Header Elements
+=======================*/
+.header-image {
+  display: block;
+  margin: 0 auto;
+  width: 220px;
+  height: auto;
+  margin-bottom: 10px;
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+h2 {
+  font-size: 24px;
+  color: #0C314E;
+  margin-bottom: 15px;
+  font-weight: 600;
+  position: relative;
+  display: inline-block;
+  padding-bottom: 5px;
+}
+
+h2:after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 70px;
+  height: 3px;
+  background: linear-gradient(90deg, #41C488, #36D179);
+  border-radius: 3px;
+}
+
+h3 {
+  font-size: 18px;
+  color: #0C314E;
+  margin-bottom: 10px;
+  font-weight: 600;
+  text-align: left;
+  position: relative;
+  padding-left: 12px;
+}
+
+h3:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 5px;
+  height: 20px;
+  background: linear-gradient(180deg, #41C488, #36D179);
+  border-radius: 2px;
+}
+
+/*======================
+  4. Editor Components
+=======================*/
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.input-section, .output-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: rgba(248, 248, 248, 0.7);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Buttons wrapper for better spacing and alignment */
+.buttons-wrapper {
+  width: 100%;
+  padding: 5px 0;
+  margin-top: 10px;
+}
+
+/* Add specific styling for output section buttons wrapper */
+.output-section .buttons-wrapper {
+  margin-top: 5px; /* Reduced from 10px to 5px */
+}
+
+/* Input and output button containers */
+.input-buttons, .output-buttons {
+  display: flex;
+  gap: 20px;  /* Increased gap between buttons */
+  flex-wrap: wrap;
+  justify-content: center; /* Center alignment */
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.input-buttons .btn {
+  flex: 1;
+  font-size: 14px; /* Slightly larger font */
+  padding: 12px 20px; /* Increased padding */
+  min-width: 140px; /* Set minimum width */
+  max-width: none;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-buttons .primary-btn {
+  min-width: 210px; /* Increased minimum width */
+  flex: 2.5; /* Make primary button wider relative to secondary */
+}
+
+/* Output section button container needs special styling */
+.output-buttons {
+  justify-content: center;
+  margin: 5px auto 5px; /* Reduced top margin from 10px to 5px */
+  width: auto;  /* Allow natural sizing instead of 100% */
+  display: inline-flex;  /* Make it wrap its content */
+}
+
+.output-buttons .btn {
+  width: auto;
+  min-width: 130px;  /* Further reduced for a more compact look */
+  max-width: 160px;  /* Further reduced for a more compact look */
+  font-size: 14px;
+  padding: 10px 20px;  /* Slightly smaller padding */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;  /* Center the button */
+  white-space: nowrap;  /* Prevent text wrapping */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;  /* Reduced space between icon and text */
+  transition: all 0.25s ease;
+}
+
+.output-buttons .btn:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(65, 196, 136, 0.25);
+}
+
+.output-buttons .btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.input-buttons .btn i,
+.output-buttons .btn i {
+  font-size: 16px; /* Larger icons */
+  margin-right: 8px; /* Added spacing between icon and text */
+}
+
+/* Make clear button narrower but still substantial */
+.clear-btn {
+  flex: 1;
+  min-width: 120px !important; /* Increased minimum width */
+}
+
+/*======================
+  5. Text Areas & Input Elements
+=======================*/
+textarea#json-input-gen {
+  width: 100%;
+  min-height: 140px;
+  padding: 12px;
+  margin-bottom: 5px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: 'Roboto Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+  box-sizing: border-box;
+  background: #ffffff;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease, border-color 1s ease;
+  color: #0C314E;
+  resize: vertical;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+
+textarea#json-input-gen::placeholder {
+  color: #8a8a8a;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+textarea#json-input-gen:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(65, 196, 136, 0.15);
+  border-color: rgba(65, 196, 136, 0.3);
+}
+
+textarea#json-input-gen:focus {
+  border-color: #41C488;
+  outline: none;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(65, 196, 136, 0.25);
+}
+
+textarea#json-input-gen:focus::placeholder {
+  opacity: 0.5;
+}
+
+.output-area {
+  position: relative;
+  width: 100%;
+  min-height: 140px;
+  padding: 12px;
+  margin-bottom: 2px;
+  background: #ffffff;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: 'Roboto Mono', 'Monaco', 'Menlo', 'Consolas', 'Courier New', monospace;
+  box-sizing: border-box;
+  text-align: left;
+  overflow-x: auto;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  color: #0C314E;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+  max-height: 350px;
+}
+
+/* Input validation error styling */
+textarea#json-input-gen.json-error {
+  border-color: #f44336 !important;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+  transition: border-color 1s ease, box-shadow 1s ease;
+}
+
+/* Override hover behavior during error state */
+textarea#json-input-gen.json-error:hover {
+  border-color: #f44336 !important;
+  transform: none;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+}
+
+/* Override focus behavior during error state */
+textarea#json-input-gen.json-error:focus {
+  border-color: #f44336 !important;
+  transform: none;
+  box-shadow: 0 0 15px rgba(244, 67, 54, 0.5) !important;
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translateX(-2px);
+  }
+  20%, 80% {
+    transform: translateX(3px);
+  }
+  30%, 50%, 70% {
+    transform: translateX(-4px);
+  }
+  40%, 60% {
+    transform: translateX(4px);
+  }
+}
+
+/*======================
+  6. Button Styles
+=======================*/
+.button-group {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 80%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.btn {
+  flex: 1;
+  max-width: 220px;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn i {
+  font-size: 18px;
+  transition: transform 0.3s ease;
+}
+
+/* Primary button styles (green) */
+.primary-btn {
+  background: linear-gradient(135deg, #41C488, #36D179);
+  color: white;
+  border: none;
+}
+
+.primary-btn:hover {
+  background-color: #2ba563;
+  transform: scale(1.05);
+  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+}
+
+.primary-btn:hover i {
+  transform: rotate(5deg) scale(1.1);
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
+}
+
+/* Secondary button styles */
+.secondary-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.secondary-btn:hover {
+  background-color: #e53935;
+  transform: scale(1.05);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+}
+
+.secondary-btn:hover i {
+  transform: scale(1.1);
+}
+
+.secondary-btn:active {
+  transform: scale(0.98);
+}
+
+/* Sample JSON button (special style) */
+#sample-json-gen {
+  background-color: #3897ef;
+}
+
+#sample-json-gen:hover {
+  background-color: #2185e0;
+}
+
+/*======================
+  8. Syntax Highlighting
+=======================*/
+.string { color: #008000; }
+.number { color: #0000ff; }
+.boolean { color: #b22222; }
+.null { color: #808080; }
+
+/*======================
+  9. Toast Notifications
+=======================*/
+.toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.toast {
+  min-width: 250px;
+  margin-bottom: 10px;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: slideIn 0.3s forwards;
+  opacity: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.toast i {
+  font-size: 18px;
+}
+
+.toast.success {
+  background: linear-gradient(135deg, #41C488, #36D179);
+}
+
+.toast.error {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+.toast.info {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+/*======================
+  10. Dark Mode Styles
+=======================*/
+/* Dark mode basic elements */
+body.dark-mode {
+  background-color: #1a1a1a;
+}
+
+body.dark-mode .container {
+  background: rgba(32, 35, 42, 0.95);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode h2, 
+body.dark-mode h3 {
+  color: #e0e0e0;
+}
+
+body.dark-mode h2:after {
+  background: linear-gradient(90deg, #36D179, #2ba563);
+}
+
+body.dark-mode h3:before {
+  background: linear-gradient(180deg, #36D179, #2ba563);
+}
+
+/* Dark mode for editor components */
+body.dark-mode .input-section, 
+body.dark-mode .output-section {
+  background: rgba(40, 44, 52, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode textarea#json-input-gen {
+  background-color: #2d2d2d;
+  border-color: #3d3d3d;
+  color: #e0e0e0;
+}
+
+body.dark-mode textarea#json-input-gen:focus {
+  border-color: #41C488;
+}
+
+body.dark-mode .output-area {
+  background-color: #2d2d2d;
+  border-color: #3d3d3d;
+  color: #e0e0e0;
+}
+
+/* Dark mode for buttons */
+body.dark-mode .primary-btn {
+  background: linear-gradient(135deg, #2d8b60, #36D179);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .primary-btn:hover {
+  background: linear-gradient(135deg, #36D179, #2d8b60);
+}
+
+body.dark-mode .secondary-btn {
+  background: linear-gradient(135deg, #d32f2f, #f44336);
+  color: #e0e0e0;
+}
+
+body.dark-mode .secondary-btn:hover {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+}
+
+body.dark-mode #sample-json-gen {
+  background: linear-gradient(135deg, #1976D2, #2196F3);
+}
+
+body.dark-mode #sample-json-gen:hover {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+/* Dark mode syntax highlighting */
+body.dark-mode .string { color: #7cbe8c; }
+body.dark-mode .number { color: #6897bb; }
+body.dark-mode .boolean { color: #cc7832; }
+body.dark-mode .null { color: #808080; }
+
+/* Dark mode for button containers */
+body.dark-mode .input-buttons .btn,
+body.dark-mode .output-buttons .btn {
+  border: none;
+}
+
+/*======================
+  11. Animations
+=======================*/
+@keyframes backgroundMove {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    transform: translate(-25%, -25%) rotate(360deg);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/*======================
+  12. Media Queries
+=======================*/
+@media (min-width: 768px) {
+  .editor-container {
+    flex-direction: row;
+    gap: 12px;
+    width: 90%;
+    max-width: 600px;
+    margin: 10px auto;
+  }
+  
+  .input-section, .output-section {
+    width: 48%;
+    box-sizing: border-box;
+    padding: 8px;
+  }
+  
+  textarea#json-input-gen,
+  .output-area {
+    min-height: 140px;
+    font-size: 13px;
+    letter-spacing: 0.2px; /* Slightly tighter spacing for smaller screens */
+    margin-bottom: 2px; /* Maintain the reduced bottom margin in responsive view */
+  }
+  
+  /* Keep reduced spacing for output section buttons wrapper */
+  .output-section .buttons-wrapper {
+    margin-top: 3px; /* Even less space in the responsive view */
+  }
+  
+  /* Adjustments for buttons in side-by-side layout */
+  .input-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .input-buttons .btn {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .input-buttons .btn i {
+    font-size: 12px;
+  }
+  
+  .clear-btn {
+    flex: 1;
+  }
+  
+  /* Maintain centered copy button in side-by-side layout */
+  .output-buttons .btn {
+    min-width: 120px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .output-buttons .btn i {
+    font-size: 12px;
+  }
+}
