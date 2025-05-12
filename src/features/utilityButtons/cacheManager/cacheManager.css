@@ -1,0 +1,17 @@
+#clearCacheBtn {
+    color: #9747FF; /* Purple color for the cache button */
+}
+
+#clearCacheBtn:hover {
+    background: rgba(151, 71, 255, 0.1);
+}
+
+/* Dark mode styles */
+body.dark-mode #clearCacheBtn {
+    color: #B388FF; /* Lighter purple for dark mode */
+    text-shadow: 0 0 10px rgba(151, 71, 255, 0.3);
+}
+
+body.dark-mode #clearCacheBtn:hover {
+    background: rgba(151, 71, 255, 0.15);
+} 

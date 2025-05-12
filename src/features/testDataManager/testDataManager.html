@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="../utilityButtons/darkMode/darkMode.css">
   <link rel="stylesheet" href="../utilityButtons/cookiesManager/cookiesManager.css">
   <link rel="stylesheet" href="../utilityButtons/localStorageManager/localStorageManager.css">
+  <link rel="stylesheet" href="../utilityButtons/cacheManager/cacheManager.css">
   <link rel="stylesheet" href="../utilityButtons/commonUtilityButtons.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -27,6 +28,10 @@
     <button id="clearLocalStorageBtn" class="utility-button">
       <i class="fas fa-database"></i>
       <span class="tooltip">Clear Local Storage</span>
+    </button>
+    <button id="clearCacheBtn" class="utility-button">
+      <i class="fas fa-broom"></i>
+      <span class="tooltip">Clear Cache</span>
     </button>
   </div>
 
@@ -60,5 +65,7 @@
   <script type="module" src="../../components/footer/footer.js" defer></script>
   <script type="module" src="../../utils/ToastManager.js" defer></script>
   <script type="module" src="../utilityButtons/cookiesManager/CookiesManager.js" defer></script>
+  <script type="module" src="../utilityButtons/localStorageManager/LocalStorageManager.js" defer></script>
+  <script type="module" src="../utilityButtons/cacheManager/CacheManager.js" defer></script>
 </body>
 </html>

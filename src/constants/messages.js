@@ -15,5 +15,7 @@ export const MESSAGES = {
     NO_LOCAL_STORAGE_TO_CLEAR: "No local storage items to clear.",
     FAILED_TO_CLEAR_LOCAL_STORAGE: "Failed to clear local storage. Please try again.",
     NO_COOKIES_TO_CLEAR: "No cookies to clear.",
-    FAILED_TO_CLEAR_COOKIES: "Failed to clear cookies. Please try again."
+    FAILED_TO_CLEAR_COOKIES: "Failed to clear cookies. Please try again.",
+    CACHE_CLEARED_SUCCESS: "Browser cache cleared successfully.",
+    FAILED_TO_CLEAR_CACHE: "Failed to clear browser cache. Please try again."
 }; 

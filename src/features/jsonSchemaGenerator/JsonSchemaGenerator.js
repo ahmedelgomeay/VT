@@ -1,5 +1,8 @@
 import ToastManager from '../../utils/ToastManager.js';
 import DarkMode from '../utilityButtons/darkMode/DarkMode.js';
+import CookiesManager from '../utilityButtons/cookiesManager/CookiesManager.js';
+import LocalStorageManager from '../utilityButtons/localStorageManager/LocalStorageManager.js';
+import CacheManager from '../utilityButtons/cacheManager/CacheManager.js';
 import { MESSAGES } from '../../constants/messages.js';
 
 export default class JsonSchemaGenerator {
@@ -327,9 +330,25 @@ export default class JsonSchemaGenerator {
     }
 }
 
-// Initialize components
-const jsonSchemaGenerator = new JsonSchemaGenerator();
-jsonSchemaGenerator.init();
-
-const darkMode = new DarkMode();
-darkMode.init(); 
+// Initialize utility buttons after the page is fully loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize dark mode
+    const darkMode = new DarkMode();
+    darkMode.init();
+    
+    // Initialize cookies manager
+    const cookiesManager = new CookiesManager();
+    cookiesManager.init();
+    
+    // Initialize local storage manager
+    const localStorageManager = new LocalStorageManager();
+    localStorageManager.init();
+    
+    // Initialize cache manager
+    const cacheManager = new CacheManager();
+    cacheManager.init();
+    
+    // Initialize the JSON Schema Generator
+    const jsonSchemaGenerator = new JsonSchemaGenerator();
+    jsonSchemaGenerator.init();
+}); 

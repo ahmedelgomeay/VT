@@ -17,6 +17,7 @@ import { MESSAGES } from '../../constants/messages.js';
 import DarkMode from '../utilityButtons/darkMode/DarkMode.js';
 import CookiesManager from '../utilityButtons/cookiesManager/CookiesManager.js';
 import LocalStorageManager from '../utilityButtons/localStorageManager/LocalStorageManager.js';
+import CacheManager from '../utilityButtons/cacheManager/CacheManager.js';
 
 /**
  * Storage keys for managing persistent data in Chrome storage
@@ -977,6 +978,7 @@ class TestDataManager {
 const testDataManager = new TestDataManager("searchBox", "searchBtn", "clearBtn", "results");
 testDataManager.init();
 
+// Initialize utility buttons
 const darkMode = new DarkMode();
 darkMode.init();
 
@@ -985,6 +987,9 @@ cookiesManager.init();
 
 const localStorageManager = new LocalStorageManager();
 localStorageManager.init();
+
+const cacheManager = new CacheManager();
+cacheManager.init();
 
 export default TestDataManager;
 
