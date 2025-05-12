@@ -14,4 +14,129 @@ body.dark-mode #clearCacheBtn {
 
 body.dark-mode #clearCacheBtn:hover {
     background: rgba(151, 71, 255, 0.15);
+}
+
+#cacheManagerBtn {
+    color: #9747FF; /* Purple color for the cache button */
+}
+
+#cacheManagerBtn:hover {
+    background: rgba(151, 71, 255, 0.1);
+}
+
+/* Dark mode styles */
+body.dark-mode #cacheManagerBtn {
+    color: #B388FF; /* Lighter purple for dark mode */
+    text-shadow: 0 0 10px rgba(151, 71, 255, 0.3);
+}
+
+body.dark-mode #cacheManagerBtn:hover {
+    background: rgba(151, 71, 255, 0.15);
+}
+
+/* Dropdown styles */
+.utility-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    background-color: #f9f9f9;
+    min-width: 180px; /* Increased from 160px to fit the text better */
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+    z-index: 1;
+    border-radius: 4px;
+    overflow: hidden; /* Ensure content doesn't break border radius */
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 10px 14px; /* Slightly adjusted padding */
+    text-decoration: none;
+    display: block;
+    font-size: 14px;
+    white-space: nowrap; /* Prevent text wrapping */
+    position: relative; /* Required for tooltip positioning */
+}
+
+.dropdown-content a:hover {
+    background-color: rgba(151, 71, 255, 0.1);
+}
+
+/* Dark mode dropdown styles */
+body.dark-mode .dropdown-content {
+    background-color: #333;
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5);
+}
+
+body.dark-mode .dropdown-content a {
+    color: #eee;
+}
+
+body.dark-mode .dropdown-content a:hover {
+    background-color: rgba(151, 71, 255, 0.15);
+}
+
+/* Dropdown tooltips container */
+.dropdown-tooltips {
+    position: absolute;
+    top: 20;
+    right: 100%;
+    margin-right: 150px; /* Increased right margin to move tooltips further left */
+    pointer-events: none;
+    width: 250px; /* Set fixed width to ensure consistent positioning */
+    z-index: 2000; /* Ensure tooltips are above other elements */
+}
+
+/* Individual dropdown tooltip style */
+.dropdown-tooltip {
+    display: none;
+    position: absolute;
+    width: 220px;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 1000;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    opacity: 0;
+    transition: opacity 0.3s;
+    white-space: normal;
+    line-height: 1.4;
+    font-weight: 500;
+    right: 0; /* Align to the right side of the container */
+    transform: translateY(-50%); /* Center vertically relative to target item */
+}
+
+/* Arrow for the tooltip */
+.dropdown-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 100%;
+    margin-top: -6px;
+    border-width: 6px;
+    border-style: solid;
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8);
+    transform: translateX(0); /* Adjust arrow position */
+}
+
+/* Dark mode tooltip styles */
+body.dark-mode .dropdown-tooltip {
+    background-color: rgba(20, 20, 20, 0.9);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .dropdown-tooltip::after {
+    border-color: transparent transparent transparent rgba(20, 20, 20, 0.9);
 } 

@@ -29,10 +29,20 @@
       <i class="fas fa-database"></i>
       <span class="tooltip">Clear Local Storage</span>
     </button>
-    <button id="clearCacheBtn" class="utility-button">
-      <i class="fas fa-broom"></i>
-      <span class="tooltip">Clear Cache</span>
-    </button>
+    <div class="utility-dropdown">
+      <button id="cacheManagerBtn" class="utility-button">
+        <i class="fas fa-broom"></i>
+        <span class="tooltip">Cache Manager</span>
+      </button>
+      <div class="dropdown-content">
+        <a href="#" id="softCacheBypass">Soft Cache Bypass</a>
+        <a href="#" id="hardCacheClear">Hard Cache Clear</a>
+      </div>
+      <div class="dropdown-tooltips">
+        <div id="softCacheTooltip" class="dropdown-tooltip">Reload the page bypassing the cache, doesn't clear cache storage</div>
+        <div id="hardCacheTooltip" class="dropdown-tooltip">Clear all browser cache from the past 7 days</div>
+      </div>
+    </div>
   </div>
 
   <div id="navbar-container"></div> <!-- Placeholder for Navbar -->

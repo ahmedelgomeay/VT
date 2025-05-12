@@ -37,10 +37,21 @@ export default class LocalStorageManager {
                 return;
             }
 
-            ToastManager.showToast(
-                `${itemsCleared} local storage item(s) cleared.`,
-                ToastManager.SUCCESS_TOAST
-            );
+            // Set up a listener for when the tab completes loading
+            chrome.tabs.onUpdated.addListener(function listener(tabId, info) {
+                if (tabId === activeTab.id && info.status === 'complete') {
+                    // Remove the listener once we've shown the toast
+                    chrome.tabs.onUpdated.removeListener(listener);
+                    
+                    // Show the toast after page is completely loaded
+                    setTimeout(() => {
+                        ToastManager.showToast(
+                            `${itemsCleared} local storage item(s) cleared.`,
+                            ToastManager.SUCCESS_TOAST
+                        );
+                    }, 1); // Small delay for better user experience
+                }
+            });
 
             // Refresh the page after clearing local storage
             await Utils.refreshActiveTab();
