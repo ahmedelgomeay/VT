@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="../utilityButtons/commonUtilityButtons.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="./tobiAssistant/tobiAssistant.css">
 </head>
 <body>
   <div class="utility-buttons">
@@ -48,6 +49,10 @@
   <div id="navbar-container"></div> <!-- Placeholder for Navbar -->
 
   <div class="container">
+    <div class="tobi-container" id="tobiContainer">
+      <img src="../../assets/icons/tobi-VF.png" alt="TOBi" class="tobi-icon" id="tobiIcon">
+      <div class="tobi-tooltip">Hi! I'm TOBi, Vodafone's chatbot.</div>
+    </div>
     <img src="../../assets/images/VOIS-logo.png" 
          alt="VOIS Logo" 
          class="header-image">
@@ -77,5 +82,6 @@
   <script type="module" src="../utilityButtons/cookiesManager/CookiesManager.js" defer></script>
   <script type="module" src="../utilityButtons/localStorageManager/LocalStorageManager.js" defer></script>
   <script type="module" src="../utilityButtons/cacheManager/CacheManager.js" defer></script>
+  <script type="module" src="./tobiAssistant/TobiAssistant.js" defer></script>
 </body>
 </html>
