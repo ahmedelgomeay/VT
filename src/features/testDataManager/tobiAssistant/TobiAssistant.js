@@ -865,6 +865,6 @@ document.addEventListener('DOMContentLoaded', () => {
              tobiAssistantInstance.updateEnvironmentStyles();
         }
     }, 100);
- });
+});
 
 export default TobiAssistant; 
