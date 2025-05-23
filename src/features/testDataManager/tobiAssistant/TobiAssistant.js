@@ -680,7 +680,7 @@ class TobiAssistant {
      */
     clearChat() {
         this.chatMessages.innerHTML = '';
-        this.chatInput.textContent = '';
+        this.chatInput.value = '';
         this.conversationHistory = []; // Clear history array
         this.saveConversationHistory(); // Save empty state
         this.testQueryCount = 0; // Reset test query counter
