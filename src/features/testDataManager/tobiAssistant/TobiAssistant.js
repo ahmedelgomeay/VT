@@ -9,7 +9,6 @@
  */
 
 import ToastManager from "../../../utils/ToastManager.js";
-import testData from "../../../data/testData.js";
 
 /**
  * TobiAssistant class responsible for managing the TOBi icon interactions
@@ -25,9 +24,6 @@ class TobiAssistant {
         this.tobiIcon = document.getElementById('tobiIcon');
         this.tobiContainer = document.getElementById('tobiContainer');
         this.tobiTooltip = this.tobiContainer.querySelector('.tobi-tooltip');
-        this.searchBox = document.getElementById('searchBox');
-        this.resultsContainer = document.getElementById('results');
-        this.environmentSelect = document.getElementById('environmentSelect');
         
         this.responses = [
             "I can help you find test data!",
@@ -50,6 +46,8 @@ class TobiAssistant {
         this.isListening = false;
         this.aiMode = false;
         this.testQueryCount = 0; // Counter for sequential test responses
+        this.conversationHistory = []; // Store conversation history
+        this.storageKey = 'tobiConversationHistory'; // Key for Chrome storage
     }
 
     /**
@@ -59,24 +57,7 @@ class TobiAssistant {
         this.setupEventListeners();
         this.occasionallyAnimate();
         this.createAiChatInterface();
-    }
-
-    /**
-     * Updates the CSS class of the environment select dropdown to match the selected environment.
-     */
-    updateEnvironmentStyles() {
-        const selectedEnvironment = this.environmentSelect.value.toLowerCase();
-        const environmentClasses = ['dev-selected', 'testing-selected', 'staging-selected', 'production-selected'];
-
-        // Remove all existing environment classes
-        environmentClasses.forEach(className => {
-            this.environmentSelect.classList.remove(className);
-        });
-
-        // Add the class for the currently selected environment
-        if (selectedEnvironment) {
-            this.environmentSelect.classList.add(`${selectedEnvironment}-selected`);
-        }
+        this.loadConversationHistory(); // Load history on initialization
     }
 
     /**
@@ -166,7 +147,7 @@ class TobiAssistant {
         this.toggleChatInterface(false);
         
         // Add welcome message
-        this.addBotMessage(this.getRandomAiPrompt());
+        // This will be handled by loadConversationHistory now if there's no saved history
     }
 
     /**
@@ -189,17 +170,9 @@ class TobiAssistant {
      * @param {string} message - The message to add
      */
     addBotMessage(message) {
-        const messageElement = document.createElement('div');
-        messageElement.className = 'tobi-chat-message bot-message';
-        messageElement.innerHTML = `
-            <div class="tobi-chat-avatar">
-                <img src="../../assets/icons/tobi-VF.png" alt="TOBi">
-            </div>
-            <div class="tobi-chat-bubble">${message}</div>
-        `;
-        
-        this.chatMessages.appendChild(messageElement);
-        this.scrollToBottom();
+        this.conversationHistory.push({ sender: 'bot', message });
+        this.saveConversationHistory();
+        this._addMessageToUI('bot', message);
     }
 
     /**
@@ -208,14 +181,37 @@ class TobiAssistant {
      * @param {string} message - The message to add
      */
     addUserMessage(message) {
+        this.conversationHistory.push({ sender: 'user', message });
+        this.saveConversationHistory();
+        this._addMessageToUI('user', message);
+    }
+
+    /**
+     * Adds a message to the chat UI without saving to history.
+     * Internal helper method.
+     * 
+     * @param {string} sender - 'user' or 'bot'
+     * @param {string} message - The message text
+     */
+    _addMessageToUI(sender, message) {
         const messageElement = document.createElement('div');
-        messageElement.className = 'tobi-chat-message user-message';
+        messageElement.className = `tobi-chat-message ${sender}-message`;
+
+        if (sender === 'bot') {
+            messageElement.innerHTML = `
+                <div class="tobi-chat-avatar">
+                    <img src="../../assets/icons/tobi-VF.png" alt="TOBi">
+                </div>
+                <div class="tobi-chat-bubble">${message}</div>
+            `;
+        } else {
         messageElement.innerHTML = `
             <div class="tobi-chat-bubble">${message}</div>
             <div class="tobi-chat-avatar user">
                 <i class="fas fa-user"></i>
             </div>
         `;
+        }
         
         this.chatMessages.appendChild(messageElement);
         this.scrollToBottom();
@@ -236,6 +232,11 @@ class TobiAssistant {
         
         if (!query) return;
         
+        if (query.toLowerCase() === 'clear') {
+            this.clearChat();
+            return;
+        }
+        
         // Add user message to chat
         this.addUserMessage(query);
         
@@ -245,25 +246,6 @@ class TobiAssistant {
         // Show typing indicator
         this.showTypingIndicator();
         
-        let environmentChanged = false;
-        const lowercaseQuery = query.toLowerCase();
-
-        // Check for environment change keywords and update select
-        const environments = ['dev', 'testing', 'staging', 'production'];
-        for (const env of environments) {
-            if (lowercaseQuery.includes(env)) {
-                if (this.environmentSelect.value !== env) {
-                    const capitalizedEnv = env.charAt(0).toUpperCase() + env.slice(1);
-                    this.environmentSelect.value = capitalizedEnv;
-                    this.updateEnvironmentStyles(); // Update styles after changing value
-                    this.addBotMessage(`Okay, I've set the environment to ${capitalizedEnv}.`);
-                    environmentChanged = true;
-                }
-                // Keep checking in case multiple environments are mentioned, though unlikely.
-                // The last one found will be set.
-            }
-        }
-        
         // Process the query with a slight delay to simulate thinking
         setTimeout(() => {
             this.hideTypingIndicator();
@@ -271,13 +253,6 @@ class TobiAssistant {
             // Generate AI response
             const response = this.generateAiResponse(query);
             this.addBotMessage(response);
-            
-            // If the generated response is the default search prompt, perform the search
-            // This prevents specific queries like 'time?' from triggering a search
-            if (response === "Let me search for that information...") {
-                const results = this.searchTestData(query);
-                this.displaySearchResults(results);
-            }
         }, 1000);
     }
 
@@ -309,139 +284,6 @@ class TobiAssistant {
         const typingIndicator = this.chatMessages.querySelector('.typing-indicator');
         if (typingIndicator) {
             this.chatMessages.removeChild(typingIndicator);
-        }
-    }
-
-    /**
-     * Determines if a query is a search query.
-     * 
-     * @param {string} query - The query to check
-     * @returns {boolean} - Whether the query is a search query
-     */
-    isSearchQuery(query) {
-        const searchTerms = ['find', 'search', 'look for', 'get', 'show', 'display', 'give me'];
-        return searchTerms.some(term => query.toLowerCase().includes(term)) || 
-               query.toLowerCase().includes('?');
-    }
-
-    /**
-     * Searches test data based on the query.
-     * 
-     * @param {string} query - The search query
-     * @returns {Array} - Array of matching results
-     */
-    searchTestData(query) {
-        const environment = this.environmentSelect.value;
-        const lowercaseQuery = query.toLowerCase();
-        let results = [];
-        
-        // Extract keywords from the query
-        const keywords = this.extractKeywords(lowercaseQuery);
-        
-        if (!testData || !testData[environment] || !testData[environment].length) {
-            return [];
-        }
-        
-        // Search through test data
-        testData[environment].forEach(item => {
-            let matchScore = 0;
-            let matchDetails = [];
-            
-            // Check each property of the item
-            for (const [key, value] of Object.entries(item)) {
-                const strValue = String(value).toLowerCase();
-                
-                // Check if any keyword matches this property
-                keywords.forEach(keyword => {
-                    if (key.toLowerCase().includes(keyword) || strValue.includes(keyword)) {
-                        matchScore += 1;
-                        matchDetails.push({ key, value, keyword });
-                    }
-                });
-            }
-            
-            if (matchScore > 0) {
-                results.push({
-                    item,
-                    score: matchScore,
-                    details: matchDetails
-                });
-            }
-        });
-        
-        // Sort results by score (highest first)
-        results.sort((a, b) => b.score - a.score);
-        
-        return results;
-    }
-
-    /**
-     * Extracts keywords from a search query.
-     * 
-     * @param {string} query - The search query
-     * @returns {Array<string>} - Array of keywords
-     */
-    extractKeywords(query) {
-        // Remove common words and punctuation
-        const stopWords = ['the', 'a', 'an', 'and', 'or', 'but', 'is', 'are', 'in', 'on', 'at', 'to', 'for', 'with', 'about', 'find', 'search', 'look', 'get', 'show', 'display', 'give', 'me', 'please'];
-        
-        return query
-            .replace(/[.,?!;:'"()\[\]{}]/g, '')
-            .split(' ')
-            .filter(word => word.length > 1 && !stopWords.includes(word));
-    }
-
-    /**
-     * Displays search results in the chat interface.
-     * 
-     * @param {Array} results - Array of search results
-     */
-    displaySearchResults(results) {
-        if (results.length === 0) {
-            this.addBotMessage("I couldn't find any matching test data. Try a different search term or check another environment.");
-            return;
-        }
-        
-        // Create a summary message
-        this.addBotMessage(`I found ${results.length} matching result${results.length > 1 ? 's' : ''}. Here's what I found:`);
-        
-        // Display each result
-        results.forEach((result, index) => {
-            if (index < 3) { // Limit to 3 results in chat
-                const item = result.item;
-                const name = item.name || 'Unnamed Entry';
-                
-                let detailsHtml = '';
-                result.details.forEach(detail => {
-                    detailsHtml += `<li><strong>${detail.key}:</strong> ${detail.value}</li>`;
-                });
-                
-                const messageHtml = `
-                    <div class="tobi-result-card">
-                        <h4>${name}</h4>
-                        <ul>
-                            ${detailsHtml}
-                        </ul>
-                    </div>
-                `;
-                
-                this.addBotMessage(messageHtml);
-            }
-        });
-        
-        // If there are more results, add a message
-        if (results.length > 3) {
-            this.addBotMessage(`There are ${results.length - 3} more results. You can see all results in the main search area.`);
-        }
-        
-        // Update the search box with the query
-        if (this.searchBox) {
-            this.searchBox.value = results[0].details[0].keyword;
-            // Trigger a click on the search button
-            const searchBtn = document.getElementById('searchBtn');
-            if (searchBtn) {
-                searchBtn.click();
-            }
         }
     }
 
@@ -507,11 +349,6 @@ class TobiAssistant {
         // Check for motivation queries
         if (this.isMotivationQuery(lowercaseQuery)) {
             return this.getRandomMotivationQuote();
-        }
-        
-        // Default responses for search-like queries
-        if (this.isSearchQuery(lowercaseQuery)) {
-            return "Let me search for that information...";
         }
         
         // Fallback response
@@ -843,9 +680,47 @@ class TobiAssistant {
      */
     clearChat() {
         this.chatMessages.innerHTML = '';
-        // Optionally add a new welcome message after clearing
-        this.addBotMessage(this.getRandomAiPrompt());
+        this.chatInput.textContent = '';
+        this.conversationHistory = []; // Clear history array
+        this.saveConversationHistory(); // Save empty state
         this.testQueryCount = 0; // Reset test query counter
+        // Optionally add a new welcome message after clearing
+        this._addMessageToUI('bot', this.getRandomAiPrompt());
+    }
+
+    /**
+     * Saves the current conversation history to Chrome storage.
+     */
+    saveConversationHistory() {
+        chrome.storage.local.set({ [this.storageKey]: this.conversationHistory }, () => {
+            if (chrome.runtime.lastError) {
+                console.error('Error saving conversation history:', chrome.runtime.lastError);
+            }
+        });
+    }
+
+    /**
+     * Loads the saved conversation history from Chrome storage.
+     */
+    loadConversationHistory() {
+        chrome.storage.local.get([this.storageKey], (result) => {
+            if (chrome.runtime.lastError) {
+                console.error('Error loading conversation history:', chrome.runtime.lastError);
+                return;
+            }
+
+            this.conversationHistory = result[this.storageKey] || [];
+
+            // Display loaded messages
+            if (this.conversationHistory.length > 0) {
+                this.conversationHistory.forEach(msg => {
+                    this._addMessageToUI(msg.sender, msg.message);
+                });
+            } else {
+                // Add initial welcome message if no history is loaded
+                this._addMessageToUI('bot', this.getRandomAiPrompt());
+            }
+        });
     }
 }
 
@@ -856,15 +731,5 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Ensure initial environment style is applied on load
-document.addEventListener('DOMContentLoaded', () => {
-    const tobiAssistantInstance = new TobiAssistant();
-    // A small delay might be needed to ensure the DOM is fully ready and the select has its initial value
-    setTimeout(() => {
-        // Check if the environmentSelect element exists before trying to update styles
-        if (tobiAssistantInstance.environmentSelect) {
-             tobiAssistantInstance.updateEnvironmentStyles();
-        }
-    }, 100);
-});
 
 export default TobiAssistant; 
