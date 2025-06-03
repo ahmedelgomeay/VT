@@ -8,7 +8,8 @@
     "storage",
     "scripting",
     "activeTab",
-    "browsingData"
+    "browsingData",
+    "sidePanel"
   ],
   "background": {
     "service_worker": "background.js"
@@ -17,9 +18,18 @@
   "action": {
     "default_popup": "src/features/testDataManager/testDataManager.html"
   },
+  "side_panel": {
+    "default_path": "src/features/testDataManager/testDataManager.html"
+  },
   "icons": {
     "16": "src/assets/icons/icon-16.png",
     "48": "src/assets/icons/icon-48.png",
     "128": "src/assets/icons/icon-128.png"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/utils/tiptap/*.css", "src/utils/tiptap/*.js", "dist/*.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

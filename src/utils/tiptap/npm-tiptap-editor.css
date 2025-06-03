@@ -1,0 +1,609 @@
+/* Tiptap Editor Styles for NPM Integration - Simple Template Style */
+
+/* Editor container */
+.tiptap-editor {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-radius: 0.5rem;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: #334155;
+  overflow-y: auto;
+  min-height: 150px !important; /* Force minimum height */
+  max-height: calc(100% - 45px) !important; /* Prevent exceeding container */
+  height: calc(100% - 45px) !important; /* Force height calculation */
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  outline: none !important; /* Remove blue outline */
+  flex: 1; /* Ensure it fills available space */
+  word-wrap: break-word; /* Ensure text wrapping */
+  word-break: break-word; /* Break long words if necessary */
+  overflow-wrap: break-word; /* Modern version of word-wrap */
+}
+
+/* Fullscreen mode support */
+.fullscreen .tiptap-editor {
+  height: calc(100% - 45px) !important;
+  max-height: calc(100% - 45px) !important;
+  min-height: 80vh !important;
+  overflow-y: auto !important;
+}
+
+/* Remove all possible focus outlines */
+.tiptap-editor *,
+.tiptap-editor *:focus,
+.tiptap-editor *:focus-visible,
+.tiptap-editor *:focus-within,
+.tiptap-editor div[contenteditable],
+.tiptap-editor div[contenteditable]:focus,
+.tiptap-editor .ProseMirror,
+.tiptap-editor .ProseMirror:focus {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Toolbar */
+.tiptap-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #E2E8F0;
+  border-bottom: none;
+  border-top-left-radius: 0.5rem;
+  border-top-right-radius: 0.5rem;
+  padding: 0.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 20; /* Increased z-index to ensure it stays above content */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  outline: none !important;
+  min-height: 44px; /* Ensure consistent height */
+  width: 100%; /* Ensure it takes full width */
+  /* Ensure it's always visible */
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Make sure toolbar stays visible even when content scrolls */
+.notes-editor-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important; /* Force contain overflow */
+  position: relative;
+  height: 100%; /* Take full height of parent */
+}
+
+.notes-content {
+  position: relative; /* Create a stacking context */
+}
+
+.tab-content {
+  position: relative; /* Create a stacking context */
+}
+
+/* Button groups */
+.tiptap-button-group {
+  display: flex;
+  margin-right: 0.75rem;
+  margin-bottom: 0;
+  border-right: 1px solid #E2E8F0;
+  padding-right: 0.75rem;
+}
+
+.tiptap-button-group:last-child {
+  border-right: none;
+  margin-right: 0;
+  padding-right: 0;
+}
+
+/* Toolbar buttons */
+.tiptap-button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  color: #64748B;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  margin: 0 1px;
+  outline: none !important;
+}
+
+.tiptap-button:focus,
+.tiptap-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.tiptap-button:hover:not(:disabled) {
+  background: #F8FAFC;
+  color: #0F172A;
+}
+
+.tiptap-button.is-active {
+  background: #F1F5F9;
+  color: #0F172A;
+  font-weight: 500;
+}
+
+.tiptap-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Content styling */
+.tiptap-editor h1 {
+  font-size: 2.25rem; /* 36px - matches Simple template */
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 1.5rem 0 0.5rem;
+  color: #0F172A;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-editor h2 {
+  font-size: 1.875rem; /* 30px - matches Simple template */
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 1.25rem 0 0.5rem;
+  color: #0F172A;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-editor h3 {
+  font-size: 1.5rem; /* 24px - matches Simple template */
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1rem 0 0.5rem;
+  color: #0F172A;
+  letter-spacing: -0.025em;
+}
+
+.tiptap-editor p {
+  margin: 0.75rem 0;
+  white-space: pre-wrap; /* Preserve spaces but allow wrapping */
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.tiptap-editor ul {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.tiptap-editor ol {
+  padding-left: 1.5rem;
+  margin: 0.75rem 0;
+}
+
+.tiptap-editor li {
+  margin: 0.25rem 0;
+}
+
+.tiptap-editor blockquote {
+  border-left: 3px solid #E2E8F0;
+  margin-left: 0;
+  margin-right: 0;
+  padding: 0.5rem 1rem;
+  color: #64748B;
+  font-style: italic;
+  margin: 1rem 0;
+}
+
+.tiptap-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.25rem;
+}
+
+.tiptap-editor a {
+  color: #2563EB;
+  text-decoration: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.15em;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  display: inline-block;
+}
+
+.tiptap-editor code {
+  background: #F1F5F9;
+  border-radius: 0.25rem;
+  padding: 0.2em 0.4em;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  color: #64748B;
+}
+
+.tiptap-editor pre {
+  background: #F1F5F9;
+  border-radius: 0.25rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 1rem 0;
+  white-space: pre-wrap; /* Allow wrapping in code blocks */
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.tiptap-editor pre code {
+  background: transparent;
+  padding: 0;
+  color: #334155;
+  white-space: pre-wrap; /* Allow wrapping in code */
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Highlight styling */
+.tiptap-editor mark {
+  background: #FEF08A; /* Yellow highlight like Simple template */
+  color: inherit;
+  padding: 0.1em 0.2em;
+  border-radius: 0.125rem;
+}
+
+/* Text alignment */
+.tiptap-editor .text-left {
+  text-align: left;
+}
+
+.tiptap-editor .text-center {
+  text-align: center;
+}
+
+.tiptap-editor .text-right {
+  text-align: right;
+}
+
+/* Placeholder */
+.tiptap-editor .is-editor-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: #94A3B8;
+  pointer-events: none;
+  height: 0;
+  font-style: normal;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin-top: 0.75rem !important;
+}
+
+/* Override the default placeholder behavior - only show on first paragraph */
+.tiptap-editor p.is-editor-empty:first-child::before {
+  position: absolute !important;
+  content: attr(data-placeholder);
+  color: #94A3B8;
+  pointer-events: none;
+  opacity: 0.8;
+  font-style: normal;
+  top: 0 !important;
+  left: 0 !important;
+  padding: 0 !important; /* Remove padding to align with cursor */
+  margin-top: 0.75rem !important; /* Match paragraph margin for proper alignment */
+  height: auto !important;
+}
+
+/* Only show placeholder on the first paragraph */
+.tiptap-editor p.is-editor-empty:not(:first-child)::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Remove focus outline completely - more comprehensive */
+.tiptap-editor:focus,
+.tiptap-editor:focus-visible,
+.tiptap-editor:focus-within {
+  outline: none !important;
+  border-color: #E2E8F0 !important;
+  box-shadow: none !important;
+}
+
+/* Also target any container elements */
+.notes-editor-container:focus,
+.notes-editor-container:focus-visible,
+.notes-editor-container:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Dark mode support */
+body.dark-mode .tiptap-editor {
+  background: #1E293B;
+  border-color: #334155;
+  color: #E2E8F0;
+}
+
+body.dark-mode .tiptap-toolbar {
+  background: #1E293B;
+  border-color: #334155;
+}
+
+body.dark-mode .tiptap-button-group {
+  border-right-color: #334155;
+}
+
+body.dark-mode .tiptap-button {
+  color: #94A3B8;
+}
+
+body.dark-mode .tiptap-button:hover:not(:disabled) {
+  background: #334155;
+  color: #F1F5F9;
+}
+
+body.dark-mode .tiptap-button.is-active {
+  background: #334155;
+  color: #F8FAFC;
+}
+
+body.dark-mode .tiptap-button:disabled {
+  opacity: 0.3;
+}
+
+body.dark-mode .tiptap-editor h1,
+body.dark-mode .tiptap-editor h2,
+body.dark-mode .tiptap-editor h3 {
+  color: #F1F5F9;
+}
+
+body.dark-mode .tiptap-editor blockquote {
+  border-left-color: #475569;
+  color: #94A3B8;
+}
+
+body.dark-mode .tiptap-editor code,
+body.dark-mode .tiptap-editor pre {
+  background: #334155;
+}
+
+body.dark-mode .tiptap-editor pre code {
+  color: #CBD5E1;
+}
+
+body.dark-mode .tiptap-editor a {
+  color: #60A5FA;
+}
+
+body.dark-mode .tiptap-editor mark {
+  background: #854D0E; /* Dark mode highlight */
+  color: #FEF08A;
+}
+
+body.dark-mode .tiptap-editor:focus,
+body.dark-mode .tiptap-editor:focus-visible,
+body.dark-mode .tiptap-editor:focus-within {
+  outline: none !important;
+  border-color: #334155 !important;
+  box-shadow: none !important;
+}
+
+body.dark-mode .notes-editor-container:focus,
+body.dark-mode .notes-editor-container:focus-visible,
+body.dark-mode .notes-editor-container:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .tiptap-toolbar {
+    flex-wrap: wrap;
+  }
+  
+  .tiptap-button-group {
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Fix for editor overflow issues */
+.notes-editor-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden !important; /* Force contain overflow */
+  position: relative;
+  height: 100%; /* Take full height of parent */
+}
+
+/* Ensure editor scrolls properly and doesn't overflow its container */
+.tiptap-editor {
+  overflow-y: auto !important; /* Always allow vertical scrolling */
+  overflow-x: hidden; /* Prevent horizontal scrolling */
+  min-height: 150px; /* Minimum height */
+  max-height: calc(100% - 45px) !important; /* Prevent exceeding container */
+  height: calc(100% - 45px) !important; /* Force height calculation */
+}
+
+/* Fix overflow issues in fullscreen mode */
+.fullscreen .notes-editor-container {
+  height: 100%;
+  max-height: calc(100vh - 110px) !important; /* Account for header, footer, and toolbar */
+}
+
+.fullscreen .tiptap-editor {
+  height: calc(100% - 45px) !important;
+  max-height: calc(100% - 45px) !important;
+}
+
+/* Fix for specific z-index issues */
+.notes-header {
+  z-index: 30 !important; /* Always on top */
+}
+
+.notes-container .tiptap-toolbar {
+  z-index: 20 !important; /* Below header but above content */
+}
+
+.notes-container .tiptap-editor {
+  z-index: 10 !important; /* Below toolbar */
+}
+
+/* Code styling for JSON */
+.tiptap-editor pre code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875em;
+  display: block;
+  overflow-x: auto;
+  white-space: pre-wrap; /* Changed from pre to pre-wrap to enable wrapping */
+  tab-size: 2;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Special styling for JSON in code blocks */
+.tiptap-editor pre.json-block {
+  background: #f8f9fc; /* Light blue background for JSON */
+  border-radius: 0.5rem;
+  border-left: 3px solid #6366F1; /* Indigo accent */
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Dark mode support for JSON code blocks */
+body.dark-mode .tiptap-editor pre.json-block {
+  background: #1a1f36;
+  border-left: 3px solid #818cf8;
+}
+
+/* JSON keyword colors */
+.tiptap-editor pre code .json-key {
+  color: #2563EB; /* Blue for keys */
+}
+
+.tiptap-editor pre code .json-value {
+  color: #059669; /* Green for values */
+}
+
+.tiptap-editor pre code .json-string {
+  color: #D97706; /* Amber for strings */
+}
+
+body.dark-mode .tiptap-editor pre code .json-key {
+  color: #60A5FA;
+}
+
+body.dark-mode .tiptap-editor pre code .json-value {
+  color: #34D399;
+}
+
+body.dark-mode .tiptap-editor pre code .json-string {
+  color: #FBBF24;
+}
+
+/* ProseMirror specific styles for wrapping */
+.tiptap-editor .ProseMirror {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Fix for editor height when content is empty */
+.tiptap-editor {
+  min-height: 150px !important; /* Force minimum height */
+  height: calc(100% - 45px) !important; /* Force height calculation */
+}
+
+/* Ensure ProseMirror content area always has height */
+.tiptap-editor .ProseMirror {
+  min-height: 100px !important; /* Ensure content area has height */
+}
+
+/* When editor is empty, ensure it still has proper height */
+.tiptap-editor.is-editor-empty .ProseMirror {
+  min-height: 100px !important;
+}
+
+/* Notes editor container for TipTap - ensure structure is preserved */
+.notes-editor-container {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 200px !important;
+  position: relative !important;
+}
+
+/* Force toolbar to be a fixed height and always visible */
+.tiptap-toolbar-container {
+  display: block !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 25 !important;
+}
+
+/* Ensure ProseMirror content area is properly positioned */
+.tiptap-editor .ProseMirror {
+  position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  white-space: break-spaces;
+  padding: 0;
+  counter-reset: footnote;
+  min-height: 100px !important;
+}
+
+/* Make sure paragraph in editor always has consistent spacing */
+.tiptap-editor p {
+  margin: 0.75rem 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 100%;
+  position: relative;
+  min-height: 1.5em; /* Ensure consistent height even when empty */
+}
+
+/* Dark mode placeholder */
+body.dark-mode .tiptap-editor .is-editor-empty::before,
+body.dark-mode .tiptap-editor p.is-editor-empty:first-child::before {
+  color: #64748B;
+}
+
+/* Fix placeholder positioning - absolute approach */
+.tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #94A3B8;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  padding-left: 0; /* Remove left padding to align with cursor */
+  padding-top: 0; /* Remove top padding to align with cursor */
+  margin-top: 0.75rem; /* Match paragraph margin for proper alignment */
+  opacity: 0.7;
+  font-style: normal;
+}
+
+/* Ensure placeholder doesn't appear on other paragraphs */
+.tiptap-editor .ProseMirror p.is-editor-empty:not(:first-child)::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* Make sure dark mode placeholder is visible */
+body.dark-mode .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  color: #64748B;
+} 
