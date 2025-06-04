@@ -19,6 +19,36 @@ function escapeHtml(text) {
 }
 
 /**
+ * Tries to parse and format JSON
+ * @param {string} text - The text to check and format
+ * @returns {string|null} - Formatted JSON or null if not valid JSON
+ */
+function tryFormatJSON(text) {
+  text = text.trim();
+  
+  // Quick check if it looks like JSON (starts with { or [ and ends with } or ])
+  if (
+    !(
+      (text.startsWith('{') && text.endsWith('}')) || 
+      (text.startsWith('[') && text.endsWith(']'))
+    )
+  ) {
+    return null;
+  }
+  
+  try {
+    // Try to parse the JSON
+    const parsed = JSON.parse(text);
+    // Format it with indentation
+    const formatted = JSON.stringify(parsed, null, 2);
+    return formatted;
+  } catch (e) {
+    // Not valid JSON
+    return null;
+  }
+}
+
+/**
  * Creates a new Tiptap editor
  * @param {Object} options - Editor options
  * @returns {Object} - Editor instance and utilities
@@ -155,15 +185,65 @@ export default function createTiptapEditor(options = {}) {
     const specialGroup = document.createElement('div');
     specialGroup.className = 'tiptap-button-group';
 
-    // Highlight
+    // Highlight color dropdown container
+    const highlightContainer = document.createElement('div');
+    highlightContainer.className = 'tiptap-dropdown-container';
+    
+    // Highlight button that shows the dropdown
     const highlightBtn = document.createElement('button');
     highlightBtn.className = 'tiptap-button';
     highlightBtn.innerHTML = '<i class="fas fa-highlighter"></i>';
     highlightBtn.title = 'Highlight';
-    highlightBtn.addEventListener('click', () => {
-      editor.chain().focus().toggleHighlight().run();
+    
+    // Highlight color dropdown
+    const highlightDropdown = document.createElement('div');
+    highlightDropdown.className = 'tiptap-dropdown';
+    
+    // Define highlight colors
+    const highlightColors = [
+      { name: 'yellow', color: '#FEF08A', title: 'Yellow' },
+      { name: 'blue', color: '#BAE6FD', title: 'Blue' },
+      { name: 'green', color: '#BBF7D0', title: 'Green' },
+      { name: 'pink', color: '#FBCFE8', title: 'Pink' },
+      { name: 'red', color: '#FCA5A5', title: 'Red' },
+      { name: 'purple', color: '#DDD6FE', title: 'Purple' },
+    ];
+    
+    // Create color buttons
+    highlightColors.forEach(highlightColor => {
+      const colorBtn = document.createElement('button');
+      colorBtn.className = 'tiptap-color-button';
+      colorBtn.style.backgroundColor = highlightColor.color;
+      colorBtn.title = highlightColor.title;
+      colorBtn.addEventListener('click', () => {
+        editor.chain().focus().toggleHighlight({ color: highlightColor.color }).run();
+        highlightDropdown.style.display = 'none';
+      });
+      highlightDropdown.appendChild(colorBtn);
     });
-    specialGroup.appendChild(highlightBtn);
+    
+    // Default yellow highlight for the main button
+    highlightBtn.addEventListener('click', (e) => {
+      if (highlightDropdown.style.display === 'flex') {
+        highlightDropdown.style.display = 'none';
+      } else {
+        highlightDropdown.style.display = 'flex';
+        // Position dropdown below the button
+        const buttonRect = highlightBtn.getBoundingClientRect();
+        highlightDropdown.style.top = `${buttonRect.height}px`;
+        highlightDropdown.style.left = '0';
+      }
+      e.stopPropagation();
+    });
+    
+    // Close dropdown when clicking elsewhere
+    document.addEventListener('click', () => {
+      highlightDropdown.style.display = 'none';
+    });
+    
+    highlightContainer.appendChild(highlightBtn);
+    highlightContainer.appendChild(highlightDropdown);
+    specialGroup.appendChild(highlightContainer);
 
     // Code
     const codeBtn = document.createElement('button');
@@ -227,7 +307,25 @@ export default function createTiptapEditor(options = {}) {
       italicBtn.classList.toggle('is-active', editor.isActive('italic'));
       underlineBtn.classList.toggle('is-active', editor.isActive('underline'));
       strikeBtn.classList.toggle('is-active', editor.isActive('strike'));
-      highlightBtn.classList.toggle('is-active', editor.isActive('highlight'));
+      
+      // Highlight button - check if any highlight is active
+      const isHighlightActive = editor.isActive('highlight');
+      highlightBtn.classList.toggle('is-active', isHighlightActive);
+      
+      // Update highlight button color indicator if a specific color is active
+      if (isHighlightActive) {
+        const attrs = editor.getAttributes('highlight');
+        if (attrs && attrs.color) {
+          // Show active color with a small indicator
+          highlightBtn.style.borderBottom = `3px solid ${attrs.color}`;
+        } else {
+          // Default yellow highlight
+          highlightBtn.style.borderBottom = '3px solid #FEF08A';
+        }
+      } else {
+        // Remove color indicator when highlight is not active
+        highlightBtn.style.borderBottom = 'none';
+      }
       
       // Heading buttons
       paragraphBtn.classList.toggle('is-active', editor.isActive('paragraph'));
@@ -300,7 +398,10 @@ export default function createTiptapEditor(options = {}) {
             }),
             Underline,
             Highlight.configure({
-              multicolor: false,
+              multicolor: true,
+              HTMLAttributes: {
+                class: 'highlight',
+              },
             }),
           ],
           content,
@@ -333,6 +434,50 @@ export default function createTiptapEditor(options = {}) {
               if (editorDOM) {
                 editorDOM.classList.add('tiptap-content');
                 editorDOM.style.minHeight = '150px';
+                
+                // Add paste event handler for JSON detection
+                editorDOM.addEventListener('paste', (e) => {
+                  // Don't handle paste if inside a code block already
+                  if (editor.isActive('codeBlock')) {
+                    return;
+                  }
+                  
+                  // Get clipboard text
+                  const clipboardData = e.clipboardData || window.clipboardData;
+                  if (!clipboardData || !clipboardData.getData) return;
+                  
+                  const text = clipboardData.getData('text/plain');
+                  if (!text) return;
+                  
+                  // Try to format as JSON
+                  const formattedJSON = tryFormatJSON(text);
+                  if (formattedJSON) {
+                    // Prevent default paste - this must be called BEFORE any editor commands
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Insert as code block with JSON styling
+                    setTimeout(() => {
+                      editor.chain()
+                        .focus()
+                        .toggleCodeBlock()
+                        .insertContent(formattedJSON)
+                        .run();
+                      
+                      // Apply JSON-specific styling
+                      setTimeout(() => {
+                        if (editor && editor.view && editor.view.dom) {
+                          const codeBlocks = editor.view.dom.querySelectorAll('pre');
+                          if (codeBlocks.length > 0) {
+                            // Add class to the most recently added code block
+                            const lastCodeBlock = codeBlocks[codeBlocks.length - 1];
+                            lastCodeBlock.classList.add('json-block');
+                          }
+                        }
+                      }, 0);
+                    }, 0);
+                  }
+                });
                 
                 editorDOM.addEventListener('keydown', (e) => {
                   // Handle Ctrl+A
