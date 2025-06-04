@@ -44,6 +44,9 @@ class NotesManager {
     this.toggleCooldown = 300; // Cooldown period in ms to prevent rapid toggles
     this.isFullscreen = false; // Track fullscreen state
 
+    // Initialize the TipTap editor integration
+    this.editorIntegration = new NpmNotesEditorIntegration();
+
     // Initialize DOM elements
     this.notesBtn = null;
     this.notesContainer = null;
@@ -54,9 +57,6 @@ class NotesManager {
     this.notesInfo = null;
     this.fullscreenBtn = null;
     this.closeBtn = null;
-
-    // Initialize TipTap editor integration
-    this.editorIntegration = new NpmNotesEditorIntegration();
 
     // Bind methods to preserve 'this' context
     this.toggleNotes = this.toggleNotes.bind(this);
@@ -72,6 +72,7 @@ class NotesManager {
     this.handleEditorUpdate = this.handleEditorUpdate.bind(this);
     this.handleOutsideClick = this.handleOutsideClick.bind(this);
     this.toggleFullscreen = this.toggleFullscreen.bind(this);
+    this.closeNotes = this.closeNotes.bind(this);
   }
 
   /**
@@ -256,30 +257,20 @@ class NotesManager {
    * Sets up all event listeners for the notes functionality.
    */
   setupEventListeners() {
-    // Notes button click - prevent event propagation
-    this.notesBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent click from bubbling to document
-      this.toggleNotes();
-    });
+    // Notes button click
+    this.notesBtn.addEventListener('click', this.toggleNotes);
     
     // New tab button click
-    this.newTabBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      this.createNewTab();
-    });
+    this.newTabBtn.addEventListener('click', this.createNewTab);
     
-    // Tab rename event listeners
-    this.tabRenameSave.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      this.renameTab();
-    });
+    // Save button in rename modal
+    this.tabRenameSave.addEventListener('click', this.renameTab);
     
-    this.tabRenameCancel.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      this.cancelRename();
-    });
+    // Cancel button in rename modal
+    this.tabRenameCancel.addEventListener('click', this.cancelRename);
     
-    this.tabRenameField.addEventListener('keyup', (e) => {
+    // Enter key in rename field
+    this.tabRenameField.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         this.renameTab();
       } else if (e.key === 'Escape') {
@@ -287,117 +278,128 @@ class NotesManager {
       }
     });
     
-    // Fullscreen button click
+    // Fullscreen button
     this.fullscreenBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent event bubbling
+      e.stopPropagation(); // Prevent event from bubbling up
       this.toggleFullscreen();
     });
     
-    // Close button click
+    // Close button
     this.closeBtn.addEventListener('click', (e) => {
-      e.stopPropagation(); // Prevent event bubbling
-      
-      // Clear fullscreen state when closing with the close button
-      if (this.isFullscreen) {
-        chrome.storage.local.set({ [STORAGE_KEYS.FULLSCREEN_STATE]: false });
-        document.body.style.overflow = ''; // Restore body scrolling
-        this.isFullscreen = false;
-      }
-      
-      // Close the notes panel
-      this.isNotesVisible = false;
-      this.saveNotes();
-      this.editorIntegration.destroyAllEditors();
-      this.notesContainer.classList.remove('active');
-      this.notesContainer.classList.remove('fullscreen');
+      e.stopPropagation(); // Prevent event from bubbling up
+      this.closeNotes();
     });
     
-    // Keyboard shortcut for fullscreen (F11)
-    document.addEventListener('keydown', (e) => {
-      // Only process if notes are visible
-      if (!this.isNotesVisible) return;
-      
-      // F11 to toggle fullscreen
-      if (e.key === 'F11') {
-        e.preventDefault(); // Prevent browser's default fullscreen
-        this.toggleFullscreen();
-      }
-      
-      // Escape to exit fullscreen if in fullscreen mode
-      if (e.key === 'Escape' && this.isFullscreen) {
+    // Tab keyboard navigation
+    this.notesTabs.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
         e.preventDefault();
-        this.toggleFullscreen();
+        
+        const tabs = Array.from(this.notesTabs.querySelectorAll('.notes-tab'));
+        const activeTabIndex = tabs.findIndex(tab => tab.classList.contains('active'));
+        
+        let newIndex;
+        if (e.key === 'ArrowUp') {
+          newIndex = activeTabIndex > 0 ? activeTabIndex - 1 : tabs.length - 1;
+        } else {
+          newIndex = activeTabIndex < tabs.length - 1 ? activeTabIndex + 1 : 0;
+        }
+        
+        if (tabs[newIndex]) {
+          this.switchTab(tabs[newIndex].dataset.tabId);
+        }
       }
     });
     
-    // Setup drag scrolling for tabs
-    this.setupTabDragScrolling();
-    
-    // Close notes when clicking outside
+    // Outside click handler to close notes if needed
     document.addEventListener('click', this.handleOutsideClick);
     
-    // Prevent closing when clicking inside the notes container
-    this.notesContainer.addEventListener('click', (e) => {
-      e.stopPropagation();
-    });
+    // Set up tab scrolling
+    this.setupTabDragScrolling();
   }
 
   /**
-   * Sets up drag-to-scroll functionality for the tabs area
+   * Sets up touch and mouse drag scrolling for tabs
    */
   setupTabDragScrolling() {
-    if (!this.notesTabs) return;
-
     let isDown = false;
     let startY;
     let scrollTop;
-
-    // Mouse down event
-    this.notesTabs.addEventListener('mousedown', (e) => {
-      // Only enable drag scrolling on the tabs area, not on close buttons or the new tab button
-      if (e.target.closest('.notes-tab-close') || e.target.closest('.new-tab-btn')) {
+    const tabs = this.notesTabs;
+    
+    // Mouse Events
+    tabs.addEventListener('mousedown', (e) => {
+      // Only if not on a tab element itself or new tab button
+      if (e.target.closest('.notes-tab') || e.target.closest('.new-tab-btn')) {
         return;
       }
       
       isDown = true;
-      this.notesTabs.style.cursor = 'grabbing';
-      startY = e.pageY - this.notesTabs.offsetTop;
-      scrollTop = this.notesTabs.scrollTop;
-      
-      // Prevent text selection during drag
-      e.preventDefault();
+      startY = e.pageY - tabs.offsetTop;
+      scrollTop = tabs.scrollTop;
+      tabs.classList.add('active-scrolling');
     });
-
-    // Mouse leave and up events - stop dragging
-    this.notesTabs.addEventListener('mouseleave', () => {
+    
+    tabs.addEventListener('mouseleave', () => {
       isDown = false;
-      this.notesTabs.style.cursor = 'default';
+      tabs.classList.remove('active-scrolling');
     });
-
-    this.notesTabs.addEventListener('mouseup', () => {
+    
+    tabs.addEventListener('mouseup', () => {
       isDown = false;
-      this.notesTabs.style.cursor = 'default';
+      tabs.classList.remove('active-scrolling');
     });
-
-    // Mouse move event - scroll the tabs
-    this.notesTabs.addEventListener('mousemove', (e) => {
+    
+    tabs.addEventListener('mousemove', (e) => {
       if (!isDown) return;
-      
       e.preventDefault();
-      const y = e.pageY - this.notesTabs.offsetTop;
-      const walk = (y - startY) * 1.5; // Scroll speed multiplier
-      this.notesTabs.scrollTop = scrollTop - walk;
+      const y = e.pageY - tabs.offsetTop;
+      const walk = (y - startY) * 2; // Scroll speed multiplier
+      tabs.scrollTop = scrollTop - walk;
     });
+    
+    // Touch Events
+    tabs.addEventListener('touchstart', (e) => {
+      // Only if not on a tab element itself or new tab button
+      if (e.target.closest('.notes-tab') || e.target.closest('.new-tab-btn')) {
+        return;
+      }
+      
+      isDown = true;
+      startY = e.touches[0].pageY - tabs.offsetTop;
+      scrollTop = tabs.scrollTop;
+      tabs.classList.add('active-scrolling');
+    }, { passive: true });
+    
+    tabs.addEventListener('touchend', () => {
+      isDown = false;
+      tabs.classList.remove('active-scrolling');
+    });
+    
+    tabs.addEventListener('touchcancel', () => {
+      isDown = false;
+      tabs.classList.remove('active-scrolling');
+    });
+    
+    tabs.addEventListener('touchmove', (e) => {
+      if (!isDown) return;
+      const y = e.touches[0].pageY - tabs.offsetTop;
+      const walk = (y - startY) * 2;
+      tabs.scrollTop = scrollTop - walk;
+    }, { passive: true });
   }
 
   /**
-   * Handle clicks outside of the notes container
+   * Handles outside clicks to hide the notes panel
    * @param {Event} e - The click event
    */
   handleOutsideClick(e) {
-    // We no longer close notes when clicking outside
-    // Notes will only be closed via the close button
-    return;
+    // If notes is not visible or we're in rename mode or we clicked inside notes, do nothing
+    if (!this.isNotesVisible || this.isRenamingTab || e.target.closest('#notesContainer') || e.target.closest('#notesBtn')) {
+      return;
+    }
+
+    this.closeNotes();
   }
 
   /**
@@ -621,20 +623,23 @@ class NotesManager {
       if (content.dataset.tabId === tabId) {
         content.classList.add('active');
         
-        // Create editor for this tab if it doesn't exist yet, with a small delay
-        setTimeout(async () => {
-          if (!this.editorIntegration.editors.has(tabId)) {
-            const tabData = this.notesData.find(tab => tab.id === tabId);
-            if (tabData) {
-              await this.editorIntegration.createEditorForTab(
-                tabId, 
-                content, 
-                tabData.content,
-                this.handleEditorUpdate
-              );
+        // Check if editorIntegration is initialized
+        if (this.editorIntegration && this.editorIntegration.editors) {
+          // Create editor for this tab if it doesn't exist yet, with a small delay
+          setTimeout(async () => {
+            if (!this.editorIntegration.editors.has(tabId)) {
+              const tabData = this.notesData.find(tab => tab.id === tabId);
+              if (tabData) {
+                await this.editorIntegration.createEditorForTab(
+                  tabId, 
+                  content, 
+                  tabData.content,
+                  this.handleEditorUpdate
+                );
+              }
             }
-          }
-        }, 10);
+          }, 10);
+        }
       } else {
         content.classList.remove('active');
       }
@@ -686,15 +691,18 @@ class NotesManager {
     // Activate the new tab
     this.switchTab(newTab.id);
     
-    // Create the rich text editor for this tab with a small delay to ensure DOM is updated
-    setTimeout(async () => {
-      await this.editorIntegration.createEditorForTab(
-        newTab.id, 
-        contentElement, 
-        newTab.content, 
-        this.handleEditorUpdate
-      );
-    }, 10);
+    // Only create editor if editorIntegration is initialized
+    if (this.editorIntegration && this.editorIntegration.initialized) {
+      // Create the rich text editor for this tab with a small delay to ensure DOM is updated
+      setTimeout(async () => {
+        await this.editorIntegration.createEditorForTab(
+          newTab.id, 
+          contentElement, 
+          newTab.content, 
+          this.handleEditorUpdate
+        );
+      }, 10);
+    }
     
     // Save to storage
     this.saveNotesDataToStorage();
@@ -819,16 +827,29 @@ class NotesManager {
   }
 
   /**
-   * Saves the current notes state to storage.
-   * This method is now called automatically when notes are edited or when closing the notes panel.
+   * Saves all notes content from the editors to the notes data
    */
   saveNotes() {
-    // Update content for all tabs that have editors
-    this.notesData.forEach(tab => {
-      const content = this.editorIntegration.getEditorContent(tab.id);
-      if (content) {
-        tab.content = content;
-        tab.timestamp = Date.now();
+    if (!this.notesData || !this.notesContent) return;
+    
+    // Check if editorIntegration is initialized and has editors
+    if (!this.editorIntegration || !this.editorIntegration.editors) return;
+    
+    // Get all tab IDs that have editors
+    const tabIds = Array.from(this.editorIntegration.editors.keys());
+    
+    // Loop through each tab with an editor
+    tabIds.forEach(tabId => {
+      // Get content from editor
+      const content = this.editorIntegration.getEditorContent(tabId);
+      
+      // Find the tab in the notes data
+      const tabIndex = this.notesData.findIndex(tab => tab.id === tabId);
+      
+      if (tabIndex !== -1) {
+        // Update the content
+        this.notesData[tabIndex].content = content;
+        this.notesData[tabIndex].timestamp = Date.now();
       }
     });
     
@@ -837,59 +858,44 @@ class NotesManager {
   }
 
   /**
-   * Saves the notes data to Chrome storage.
-   * 
-   * @returns {Promise} A promise that resolves when storage is updated
+   * Saves the notes data to Chrome storage
+   * @returns {Promise} A promise that resolves when data is saved
    */
   saveNotesDataToStorage() {
     return chrome.storage.local.set({ [STORAGE_KEYS.NOTES_DATA]: this.notesData });
   }
 
   /**
-   * Generates a unique ID for a tab.
-   * 
+   * Generates a unique ID for a new tab
    * @returns {string} A unique ID
    */
   generateTabId() {
-    return 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
   }
 
   /**
-   * Toggles the visibility of the notes panel.
+   * Toggles the visibility of the notes panel
    */
   toggleNotes() {
+    // Check if we need to enforce cooldown
     const now = Date.now();
-    // Prevent rapid toggling
     if (now - this.lastToggleTime < this.toggleCooldown) {
-      return;
+      return; // Ignore rapid toggling
     }
     this.lastToggleTime = now;
     
+    // Toggle notes visibility
+    this.isNotesVisible = !this.isNotesVisible;
+    
     if (this.isNotesVisible) {
-      // Save notes before closing
-      this.saveNotes();
-      
-      // Save fullscreen state before closing
-      chrome.storage.local.set({ [STORAGE_KEYS.FULLSCREEN_STATE]: this.isFullscreen });
-      
-      // Exit fullscreen mode if active
-      if (this.isFullscreen) {
-        this.notesContainer.classList.remove('fullscreen');
-        this.fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
-        this.fullscreenBtn.title = 'Enter fullscreen';
-        this.isFullscreen = false;
-      }
-      
-      // Cleanup TipTap editors
-      this.editorIntegration.destroyAllEditors();
-      
-      // Hide notes panel
-      this.notesContainer.classList.remove('active');
-      this.isNotesVisible = false;
-    } else {
-      // Show notes panel
+      // Show notes
       this.notesContainer.classList.add('active');
-      this.isNotesVisible = true;
+      
+      // If in fullscreen mode, add the fullscreen class
+      if (this.isFullscreen) {
+        this.notesContainer.classList.add('fullscreen');
+        document.body.style.overflow = 'hidden'; // Prevent body scrolling
+      }
       
       // Initialize the TipTap editor integration if not already initialized
       if (!this.editorIntegration.initialized) {
@@ -933,69 +939,109 @@ class NotesManager {
           }
         }, 10);
       }
+      
+    } else {
+      // Hide notes
+      this.saveNotes();
+      // Only destroy editors if they exist
+      if (this.editorIntegration && this.editorIntegration.editors) {
+        this.editorIntegration.destroyAllEditors();
+      }
+      this.notesContainer.classList.remove('active');
+      
+      // If in fullscreen mode, exit fullscreen when closing
+      if (this.isFullscreen) {
+        document.body.style.overflow = ''; // Restore body scrolling
+        
+        // Delay removing fullscreen class until after closing animation
+        setTimeout(() => {
+          this.notesContainer.classList.remove('fullscreen');
+        }, 300);
+      }
     }
   }
 
   /**
-   * Toggles fullscreen mode for the notes container.
+   * Toggles fullscreen mode for the notes panel
    */
   toggleFullscreen() {
+    // Update fullscreen state
     this.isFullscreen = !this.isFullscreen;
     
+    // Save fullscreen state
+    chrome.storage.local.set({ [STORAGE_KEYS.FULLSCREEN_STATE]: this.isFullscreen });
+    
+    // Apply appropriate classes and styles
     if (this.isFullscreen) {
       // Enter fullscreen mode
-      document.body.style.overflow = 'hidden'; // Prevent body scrolling
       this.notesContainer.classList.add('fullscreen');
       this.fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
       this.fullscreenBtn.title = 'Exit fullscreen';
-      
-      // Save fullscreen state
-      chrome.storage.local.set({ [STORAGE_KEYS.FULLSCREEN_STATE]: true });
-      
-      // Force layout recalculation for proper rendering
-      this.notesContainer.style.display = 'none';
-      setTimeout(() => {
-        this.notesContainer.style.display = 'flex';
-        
-        // Refresh the editors to adjust to new size
-        setTimeout(() => {
-          if (this.activeTabId) {
-            const editor = this.editorIntegration.editors.get(this.activeTabId);
-            if (editor) {
-              // Force a re-render by getting and setting content
-              const content = editor.getContent();
-              editor.setContent(content);
-            }
-          }
-        }, 100);
-      }, 10);
+      document.body.style.overflow = 'hidden'; // Prevent body scrolling
     } else {
       // Exit fullscreen mode
-      document.body.style.overflow = ''; // Restore body scrolling
       this.notesContainer.classList.remove('fullscreen');
       this.fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
       this.fullscreenBtn.title = 'Enter fullscreen';
-      
-      // Save fullscreen state
+      document.body.style.overflow = ''; // Restore body scrolling
+    }
+    
+    // Make sure notes container stays visible
+    if (!this.isNotesVisible) {
+      this.isNotesVisible = true;
+      this.notesContainer.classList.add('active');
+    }
+    
+    // Refresh the editors to adjust to new size
+    setTimeout(() => {
+      if (this.activeTabId) {
+        const editor = this.editorIntegration?.editors?.get(this.activeTabId);
+        if (editor) {
+          // Force a re-render by getting and setting content
+          const content = editor.getContent();
+          editor.setContent(content);
+        }
+      }
+    }, 100);
+  }
+
+  /**
+   * Closes the notes panel
+   */
+  closeNotes() {
+    // Only proceed if the notes are visible
+    if (!this.isNotesVisible) return;
+    
+    // Save notes before closing
+    this.saveNotes();
+    
+    // Destroy all editors if editor integration is initialized
+    if (this.editorIntegration && this.editorIntegration.editors) {
+      this.editorIntegration.destroyAllEditors();
+    }
+    
+    // Hide notes panel
+    this.notesContainer.classList.remove('active');
+    this.isNotesVisible = false;
+    
+    // Handle fullscreen state
+    if (this.isFullscreen) {
+      // Reset fullscreen state
+      this.isFullscreen = false;
+      // Save the updated fullscreen state to storage
       chrome.storage.local.set({ [STORAGE_KEYS.FULLSCREEN_STATE]: false });
       
-      // Force layout recalculation for proper rendering
-      this.notesContainer.style.display = 'none';
+      // Update button appearance
+      this.fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+      this.fullscreenBtn.title = 'Enter fullscreen';
+      
+      // Restore body scrolling
+      document.body.style.overflow = '';
+      
+      // Delay removing fullscreen class until after closing animation
       setTimeout(() => {
-        this.notesContainer.style.display = 'flex';
-        
-        // Refresh the editors to adjust to new size
-        setTimeout(() => {
-          if (this.activeTabId) {
-            const editor = this.editorIntegration.editors.get(this.activeTabId);
-            if (editor) {
-              // Force a re-render by getting and setting content
-              const content = editor.getContent();
-              editor.setContent(content);
-            }
-          }
-        }, 100);
-      }, 10);
+        this.notesContainer.classList.remove('fullscreen');
+      }, 300);
     }
   }
 }

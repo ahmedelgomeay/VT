@@ -74,82 +74,138 @@ export class NpmNotesEditorIntegration {
    * @param {function} onUpdate - Callback when content changes
    */
   async createEditorForTab(tabId, tabContent, initialContent = '', onUpdate = null) {
-    // Make sure editor is loaded
-    if (!createTiptapEditor) {
-      await loadTiptapEditor();
+    try {
+      // Make sure editor is loaded
       if (!createTiptapEditor) {
-        console.error('Failed to load Tiptap editor');
-        return null;
+        await loadTiptapEditor();
+        if (!createTiptapEditor) {
+          console.error('Failed to load Tiptap editor');
+          return null;
+        }
       }
-    }
-    
-    // If an editor already exists for this tab, destroy it first
-    if (this.editors.has(tabId)) {
-      this.destroyEditorForTab(tabId);
-    }
-    
-    // Create a div to replace the textarea
-    const editorContainer = document.createElement('div');
-    editorContainer.className = 'notes-editor-container';
-    editorContainer.style.width = '100%';
-    editorContainer.style.maxWidth = '100%';
-    editorContainer.style.overflowWrap = 'break-word';
-    
-    // Check for textarea, create one if it doesn't exist
-    let textarea = tabContent.querySelector('.notes-textarea');
-    if (!textarea) {
-      // If there's no textarea, we'll create one or use an existing container
-      if (tabContent.children.length === 0) {
-        // Create a new textarea if the tab content is empty
-        textarea = document.createElement('textarea');
-        textarea.className = 'notes-textarea';
-        textarea.value = initialContent || '';
-        tabContent.appendChild(textarea);
-      } else {
-        // Use the existing content element directly
-        tabContent.innerHTML = ''; // Clear existing content
+      
+      // If an editor already exists for this tab, destroy it first
+      if (this.editors.has(tabId)) {
+        this.destroyEditorForTab(tabId);
+      }
+      
+      // Create a div to replace the textarea
+      const editorContainer = document.createElement('div');
+      editorContainer.className = 'notes-editor-container';
+      editorContainer.style.width = '100%';
+      editorContainer.style.maxWidth = '100%';
+      editorContainer.style.overflowWrap = 'break-word';
+      
+      // Check for textarea, create one if it doesn't exist
+      let textarea = tabContent.querySelector('.notes-textarea');
+      if (!textarea) {
+        // If there's no textarea, we'll create one or use an existing container
+        if (tabContent.children.length === 0) {
+          // Create a new textarea if the tab content is empty
+          textarea = document.createElement('textarea');
+          textarea.className = 'notes-textarea';
+          textarea.value = initialContent || '';
+          tabContent.appendChild(textarea);
+        } else {
+          // Use the existing content element directly
+          tabContent.innerHTML = ''; // Clear existing content
+          
+          // Create a temporary textarea for conversion
+          textarea = document.createElement('textarea');
+          textarea.className = 'notes-textarea';
+          textarea.value = initialContent || '';
+          tabContent.appendChild(textarea);
+        }
+      }
+      
+      // Now we should have a textarea
+      if (textarea) {
+        // Save the content from the textarea
+        const savedContent = textarea.value || initialContent;
         
-        // Create a temporary textarea for conversion
-        textarea = document.createElement('textarea');
-        textarea.className = 'notes-textarea';
-        textarea.value = initialContent || '';
-        tabContent.appendChild(textarea);
+        // Replace the textarea with our container
+        textarea.parentNode.replaceChild(editorContainer, textarea);
+        
+        try {
+          // Create the editor
+          const editor = createTiptapEditor({
+            content: savedContent,
+            placeholder: 'Write your notes here...',
+            autofocus: tabContent.classList.contains('active')
+          });
+          
+          if (!editor) {
+            console.error('Failed to create editor instance');
+            // Create and add a fallback textarea
+            this.createFallbackTextarea(tabContent, savedContent);
+            return null;
+          }
+          
+          // Initialize the editor
+          try {
+            editor.init(editorContainer);
+          } catch (initError) {
+            console.error('Error initializing editor:', initError);
+            // Create and add a fallback textarea
+            this.createFallbackTextarea(tabContent, savedContent);
+            return null;
+          }
+          
+          // Add update event listener
+          if (onUpdate) {
+            try {
+              editor.on('update', (content) => {
+                onUpdate(tabId, content);
+              });
+            } catch (error) {
+              console.error('Error attaching update listener:', error);
+              // This is not critical, we can continue without the listener
+            }
+          }
+          
+          // Store the editor reference
+          this.editors.set(tabId, editor);
+          
+          return editor;
+        } catch (editorCreationError) {
+          console.error('Error creating editor:', editorCreationError);
+          // Create and add a fallback textarea
+          this.createFallbackTextarea(tabContent, savedContent);
+          return null;
+        }
       }
+      
+      console.error('Failed to create editor for tab', tabId);
+      return null;
+    } catch (error) {
+      console.error('Error creating editor for tab', tabId, error);
+      return null;
     }
+  }
+  
+  /**
+   * Creates a fallback textarea when editor initialization fails
+   * @param {HTMLElement} tabContent - The tab content element
+   * @param {string} content - The content to place in the textarea
+   */
+  createFallbackTextarea(tabContent, content = '') {
+    // Create a fallback textarea
+    const fallbackTextarea = document.createElement('textarea');
+    fallbackTextarea.className = 'notes-textarea';
+    fallbackTextarea.placeholder = 'Write your notes here...';
+    fallbackTextarea.value = content || '';
+    fallbackTextarea.style.width = '100%';
+    fallbackTextarea.style.height = '100%';
+    fallbackTextarea.style.minHeight = '200px';
+    fallbackTextarea.style.padding = '10px';
+    fallbackTextarea.style.boxSizing = 'border-box';
+    fallbackTextarea.style.border = '1px solid #E2E8F0';
+    fallbackTextarea.style.borderRadius = '0.5rem';
+    fallbackTextarea.style.resize = 'none';
     
-    // Now we should have a textarea
-    if (textarea) {
-      // Save the content from the textarea
-      const savedContent = textarea.value || initialContent;
-      
-      // Replace the textarea with our container
-      textarea.parentNode.replaceChild(editorContainer, textarea);
-      
-      // Create the editor
-      const editor = createTiptapEditor({
-        content: savedContent,
-        placeholder: 'Write your notes here...',
-        autofocus: tabContent.classList.contains('active')
-      });
-      
-      // Initialize the editor
-      editor.init(editorContainer);
-      
-      // Add update event listener
-      if (onUpdate) {
-        editor.on('update', (content) => {
-          onUpdate(tabId, content);
-        });
-      }
-      
-      // Store the editor reference
-      this.editors.set(tabId, editor);
-      
-      return editor;
-    }
-    
-    console.error('Failed to create editor for tab', tabId);
-    return null;
+    // Clear the tab content and add the textarea
+    tabContent.innerHTML = '';
+    tabContent.appendChild(fallbackTextarea);
   }
   
   /**

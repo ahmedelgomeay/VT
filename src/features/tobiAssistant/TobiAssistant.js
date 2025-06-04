@@ -146,7 +146,7 @@ class TobiAssistant {
         this.chatInput = document.createElement('input');
         this.chatInput.type = 'text';
         this.chatInput.className = 'tobi-chat-input';
-        this.chatInput.placeholder = 'Ask TOBi about test data...';
+        this.chatInput.placeholder = 'Type here to talk to TOBi...';
         this.chatInput.autocomplete = 'off';
         
         const sendButton = document.createElement('button');

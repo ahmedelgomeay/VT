@@ -1,6 +1,5 @@
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import Placeholder from '@tiptap/extension-placeholder';
 import Underline from '@tiptap/extension-underline';
 import Highlight from '@tiptap/extension-highlight';
 import './npm-tiptap-editor.css';
@@ -27,7 +26,7 @@ function escapeHtml(text) {
 export default function createTiptapEditor(options = {}) {
   const {
     content = '',
-    placeholder = 'Write something...',
+    placeholder = '', // Keep parameter for backward compatibility
     editable = true,
     autofocus = false,
   } = options;
@@ -42,32 +41,13 @@ export default function createTiptapEditor(options = {}) {
    * @returns {HTMLElement} - The toolbar element
    */
   const createToolbar = () => {
+    if (!editor) {
+      console.error('Cannot create toolbar: editor is not initialized');
+      return document.createElement('div');
+    }
+    
     const toolbar = document.createElement('div');
     toolbar.className = 'tiptap-toolbar';
-
-    // Undo/Redo group
-    const historyGroup = document.createElement('div');
-    historyGroup.className = 'tiptap-button-group';
-
-    // Undo
-    const undoBtn = document.createElement('button');
-    undoBtn.className = 'tiptap-button';
-    undoBtn.innerHTML = '<i class="fas fa-undo"></i>';
-    undoBtn.title = 'Undo';
-    undoBtn.addEventListener('click', () => {
-      editor.chain().focus().undo().run();
-    });
-    historyGroup.appendChild(undoBtn);
-
-    // Redo
-    const redoBtn = document.createElement('button');
-    redoBtn.className = 'tiptap-button';
-    redoBtn.innerHTML = '<i class="fas fa-redo"></i>';
-    redoBtn.title = 'Redo';
-    redoBtn.addEventListener('click', () => {
-      editor.chain().focus().redo().run();
-    });
-    historyGroup.appendChild(redoBtn);
 
     // Text formatting buttons
     const formatGroup = document.createElement('div');
@@ -113,23 +93,13 @@ export default function createTiptapEditor(options = {}) {
     });
     formatGroup.appendChild(strikeBtn);
 
-    // Highlight
-    const highlightBtn = document.createElement('button');
-    highlightBtn.className = 'tiptap-button';
-    highlightBtn.innerHTML = '<i class="fas fa-highlighter"></i>';
-    highlightBtn.title = 'Highlight';
-    highlightBtn.addEventListener('click', () => {
-      editor.chain().focus().toggleHighlight().run();
-    });
-    formatGroup.appendChild(highlightBtn);
-
     // Heading buttons
     const headingGroup = document.createElement('div');
     headingGroup.className = 'tiptap-button-group';
 
     // Paragraph
     const paragraphBtn = document.createElement('button');
-    paragraphBtn.className = 'tiptap-button';
+    paragraphBtn.className = 'tiptap-button tiptap-text-button';
     paragraphBtn.innerHTML = 'P';
     paragraphBtn.title = 'Paragraph';
     paragraphBtn.addEventListener('click', () => {
@@ -139,7 +109,7 @@ export default function createTiptapEditor(options = {}) {
 
     // H1
     const h1Btn = document.createElement('button');
-    h1Btn.className = 'tiptap-button';
+    h1Btn.className = 'tiptap-button tiptap-text-button';
     h1Btn.innerHTML = 'H1';
     h1Btn.title = 'Heading 1';
     h1Btn.addEventListener('click', () => {
@@ -149,7 +119,7 @@ export default function createTiptapEditor(options = {}) {
 
     // H2
     const h2Btn = document.createElement('button');
-    h2Btn.className = 'tiptap-button';
+    h2Btn.className = 'tiptap-button tiptap-text-button';
     h2Btn.innerHTML = 'H2';
     h2Btn.title = 'Heading 2';
     h2Btn.addEventListener('click', () => {
@@ -181,9 +151,19 @@ export default function createTiptapEditor(options = {}) {
     });
     listGroup.appendChild(orderedListBtn);
 
-    // Code and blockquote buttons
-    const mediaGroup = document.createElement('div');
-    mediaGroup.className = 'tiptap-button-group';
+    // Highlight and special formatting
+    const specialGroup = document.createElement('div');
+    specialGroup.className = 'tiptap-button-group';
+
+    // Highlight
+    const highlightBtn = document.createElement('button');
+    highlightBtn.className = 'tiptap-button';
+    highlightBtn.innerHTML = '<i class="fas fa-highlighter"></i>';
+    highlightBtn.title = 'Highlight';
+    highlightBtn.addEventListener('click', () => {
+      editor.chain().focus().toggleHighlight().run();
+    });
+    specialGroup.appendChild(highlightBtn);
 
     // Code
     const codeBtn = document.createElement('button');
@@ -193,7 +173,7 @@ export default function createTiptapEditor(options = {}) {
     codeBtn.addEventListener('click', () => {
       editor.chain().focus().toggleCode().run();
     });
-    mediaGroup.appendChild(codeBtn);
+    specialGroup.appendChild(codeBtn);
 
     // Blockquote
     const blockquoteBtn = document.createElement('button');
@@ -203,25 +183,40 @@ export default function createTiptapEditor(options = {}) {
     blockquoteBtn.addEventListener('click', () => {
       editor.chain().focus().toggleBlockquote().run();
     });
-    mediaGroup.appendChild(blockquoteBtn);
+    specialGroup.appendChild(blockquoteBtn);
 
-    // Add all groups to toolbar
-    toolbar.appendChild(historyGroup);
+    // Undo/Redo group
+    const historyGroup = document.createElement('div');
+    historyGroup.className = 'tiptap-button-group';
+
+    // Undo
+    const undoBtn = document.createElement('button');
+    undoBtn.className = 'tiptap-button';
+    undoBtn.innerHTML = '<i class="fas fa-undo"></i>';
+    undoBtn.title = 'Undo';
+    undoBtn.addEventListener('click', () => {
+      editor.chain().focus().undo().run();
+    });
+    historyGroup.appendChild(undoBtn);
+
+    // Redo
+    const redoBtn = document.createElement('button');
+    redoBtn.className = 'tiptap-button';
+    redoBtn.innerHTML = '<i class="fas fa-redo"></i>';
+    redoBtn.title = 'Redo';
+    redoBtn.addEventListener('click', () => {
+      editor.chain().focus().redo().run();
+    });
+    historyGroup.appendChild(redoBtn);
+
+    // Add all groups to toolbar in the order they should appear
     toolbar.appendChild(formatGroup);
     toolbar.appendChild(headingGroup);
     toolbar.appendChild(listGroup);
-    toolbar.appendChild(mediaGroup);
+    toolbar.appendChild(specialGroup);
+    toolbar.appendChild(historyGroup);
 
-    // Update active states based on editor state
-    editor.on('selectionUpdate', () => {
-      updateToolbarState();
-    });
-    
-    editor.on('transaction', () => {
-      updateToolbarState();
-    });
-
-    // Update toolbar button states
+    // Update toolbar button states initially
     const updateToolbarState = () => {
       // History buttons
       undoBtn.disabled = !editor.can().undo();
@@ -247,129 +242,137 @@ export default function createTiptapEditor(options = {}) {
       codeBtn.classList.toggle('is-active', editor.isActive('code'));
       blockquoteBtn.classList.toggle('is-active', editor.isActive('blockquote'));
     };
+    
+    // Update toolbar when selection changes
+    editor.on('selectionUpdate', updateToolbarState);
+    editor.on('transaction', updateToolbarState);
+    
+    // Initial state update
+    updateToolbarState();
 
     return toolbar;
   };
 
   /**
    * Initializes the editor
-   * @param {HTMLElement} element - The container element
+   * @param {HTMLElement} container - The container element
    */
   const init = (container) => {
-    if (!container) {
-      console.error('Container element is required');
-      return;
-    }
-
-    // Create editor container
-    editorElement = document.createElement('div');
-    editorElement.className = 'tiptap-editor';
-
-    // Create editor instance
-    editor = new Editor({
-      element: editorElement,
-      extensions: [
-        StarterKit.configure({
-          heading: {
-            levels: [1, 2],
-          },
-          history: {
-            depth: 100,
-            newGroupDelay: 500,
-          },
-          bulletList: {
-            keepMarks: true,
-            keepAttributes: true,
-          },
-          orderedList: {
-            keepMarks: true,
-            keepAttributes: true,
-          },
-        }),
-        Placeholder.configure({
-          placeholder,
-          emptyEditorClass: 'is-editor-empty',
-          emptyNodeClass: 'is-empty',
-          showOnlyWhenEditable: true,
-          showOnlyCurrent: true, // Only show placeholder on current node
-        }),
-        Underline,
-        Highlight.configure({
-          multicolor: false,
-        }),
-      ],
-      content,
-      editable,
-      autofocus,
-      onUpdate: ({ editor }) => {
-        // Get the updated content
-        const updatedContent = editor.getHTML();
-        
-        // Ensure there's always at least one paragraph for proper placeholder display
-        if (editor.isEmpty) {
-          // Set a minimal paragraph without affecting the isEmpty state
-          editor.view.dom.querySelector('.ProseMirror').style.minHeight = '150px';
-        }
-        
-        // Notify listeners
-        if (listeners.has('update')) {
-          listeners.get('update')(updatedContent);
-        }
-      },
-    });
-
-    // Create and add toolbar
-    toolbarElement = createToolbar();
-    
-    // Create a container for the toolbar to ensure it stays visible
-    const toolbarContainer = document.createElement('div');
-    toolbarContainer.className = 'tiptap-toolbar-container';
-    toolbarContainer.appendChild(toolbarElement);
-    
-    // Add components to container
-    container.appendChild(toolbarContainer);
-    container.appendChild(editorElement);
-    
-    // Add event listener for key combinations
-    editorElement.addEventListener('keydown', (e) => {
-      // Handle Ctrl+A
-      if (e.ctrlKey && e.key === 'a') {
-        console.log('Ctrl+A detected');
-        // Let the select all happen normally
-        
-        // But set up a listener for the delete/backspace that might follow
-        const handleDelete = (deleteEvent) => {
-          if (deleteEvent.key === 'Delete' || deleteEvent.key === 'Backspace') {
-            console.log('Delete after Ctrl+A detected');
-            
-            // Prevent the editor from becoming completely empty
-            setTimeout(() => {
-              if (editor.isEmpty) {
-                editor.commands.clearContent(false);
-                editor.commands.focus();
-              }
-            }, 0);
-          }
-          
-          // Remove this listener after first keypress
-          editorElement.removeEventListener('keydown', handleDelete);
-        };
-        
-        // Add temporary listener for the next keypress
-        editorElement.addEventListener('keydown', handleDelete);
+    try {
+      if (!container) {
+        console.error('Container element is required');
+        return;
       }
-    });
-
-    // Initialize the editor
-    editor.init(editorContainer);
-    
-    // Add a class to the ProseMirror element for better CSS targeting
-    const proseMirror = editorElement.querySelector('.ProseMirror');
-    if (proseMirror) {
-      proseMirror.classList.add('tiptap-content');
+  
+      // Create editor container
+      editorElement = document.createElement('div');
+      editorElement.className = 'tiptap-editor';
       
-      // Set minimum height to ensure consistency
-      proseMirror.style.minHeight = '150px';
+      // Create a container for the toolbar to ensure it stays visible
+      const toolbarContainer = document.createElement('div');
+      toolbarContainer.className = 'tiptap-toolbar-container';
+      
+      // Add editor element to container
+      container.appendChild(toolbarContainer);
+      container.appendChild(editorElement);
+  
+      try {
+        // Create editor instance first
+        editor = new Editor({
+          element: editorElement,
+          extensions: [
+            StarterKit.configure({
+              heading: {
+                levels: [1, 2],
+              },
+              history: {
+                depth: 100,
+                newGroupDelay: 500,
+              },
+              bulletList: {
+                keepMarks: true,
+                keepAttributes: true,
+              },
+              orderedList: {
+                keepMarks: true,
+                keepAttributes: true,
+              },
+            }),
+            Underline,
+            Highlight.configure({
+              multicolor: false,
+            }),
+          ],
+          content,
+          editable,
+          autofocus,
+          onUpdate: ({ editor }) => {
+            // Get the updated content
+            const updatedContent = editor.getHTML();
+            
+            // Notify listeners
+            if (listeners.has('update')) {
+              listeners.get('update')(updatedContent);
+            }
+          },
+        });
+        
+        // Now that editor is created, create the toolbar
+        if (editor) {
+          toolbarElement = createToolbar();
+          toolbarContainer.appendChild(toolbarElement);
+          
+          // Set minimum height to ensure consistency
+          editorElement.style.minHeight = '150px';
+          
+          // After the editor is created
+          try {
+            editor.on('create', () => {
+              // Add event listener for key combinations
+              const editorDOM = editor.view?.dom;
+              if (editorDOM) {
+                editorDOM.classList.add('tiptap-content');
+                editorDOM.style.minHeight = '150px';
+                
+                editorDOM.addEventListener('keydown', (e) => {
+                  // Handle Ctrl+A
+                  if (e.ctrlKey && e.key === 'a') {
+                    // Let the select all happen normally
+                    
+                    // But set up a listener for the delete/backspace that might follow
+                    const handleDelete = (deleteEvent) => {
+                      if (deleteEvent.key === 'Delete' || deleteEvent.key === 'Backspace') {
+                        // Prevent the editor from becoming completely empty
+                        setTimeout(() => {
+                          if (editor && editor.isEmpty) {
+                            editor.commands.clearContent(false);
+                            editor.commands.focus();
+                          }
+                        }, 0);
+                      }
+                      
+                      // Remove this listener after first keypress
+                      editorDOM.removeEventListener('keydown', handleDelete);
+                    };
+                    
+                    // Add temporary listener for the next keypress
+                    editorDOM.addEventListener('keydown', handleDelete);
+                  }
+                });
+              }
+            });
+          } catch (eventError) {
+            console.error('Error setting up editor events:', eventError);
+          }
+        } else {
+          console.error('Failed to create editor instance');
+        }
+      } catch (editorError) {
+        console.error('Error creating TipTap editor instance:', editorError);
+        return;
+      }
+    } catch (error) {
+      console.error('Error initializing TipTap editor:', error);
     }
   };
 
