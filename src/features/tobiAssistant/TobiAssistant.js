@@ -37,6 +37,7 @@ class TobiAssistant {
         this.conversationHistory = []; // Store conversation history
         this.storageKey = 'tobiConversationHistory'; // Key for Chrome storage
         this.animationTimerId = null;
+        this.isFullscreen = true; // Set fullscreen mode as default
     }
 
     /**
@@ -116,6 +117,9 @@ class TobiAssistant {
         this.chatContainer = document.createElement('div');
         this.chatContainer.className = 'tobi-chat-container';
         this.chatContainer.style.display = 'none'; // Explicitly hide on creation
+        
+        // Add fullscreen class by default
+        this.chatContainer.classList.add('fullscreen');
         
         // Create chat header
         const chatHeader = document.createElement('div');
@@ -216,6 +220,9 @@ class TobiAssistant {
                 this.scrollToBottom();
                 this.aiMode = true;
                 
+                // Always apply fullscreen styles
+                document.body.style.overflow = 'hidden'; // Prevent body scrolling
+                
                 // Add a welcome message with random AI prompt when opened
                 if (this.chatMessages.children.length === 0) {
                     this.addBotMessage(this.getRandomAiPrompt());
@@ -237,6 +244,9 @@ class TobiAssistant {
                 console.log('Closing TOBi chat interface');
                 this.chatContainer.style.display = 'none';
                 this.aiMode = false;
+                
+                // Restore body scrolling when closing
+                document.body.style.overflow = '';
             }
         }
     }
@@ -900,5 +910,14 @@ class TobiAssistant {
         this.addBotMessage(errorMessage);
     }
 }
+
+// Create and initialize the TobiAssistant when the DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize the TobiAssistant
+    const tobiAssistant = new TobiAssistant();
+    
+    // Initialize the assistant (always fullscreen)
+    tobiAssistant.init();
+});
 
 export default TobiAssistant; 

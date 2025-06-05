@@ -695,26 +695,30 @@ body.side-panel-mode .notes-container {
   max-width: 90px; /* Decreased from 140px */
 }
 
-/* Close button styles */
+/* Close button styles - matches TOBi's close button */
 .notes-close-btn {
-  background: transparent;
+  background: none;
   border: none;
   color: white;
+  font-size: 24px;
   cursor: pointer;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  padding: 6px;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  margin-left: 8px;
+  margin-left: 5px;
+  z-index: 10001;
 }
 
 .notes-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  transform: scale(1.2);
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
 }
 
 .notes-close-btn i {
-  font-size: 14px;
+  font-size: 20px;
 } 

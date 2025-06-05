@@ -8,8 +8,7 @@
     "storage",
     "scripting",
     "activeTab",
-    "browsingData",
-    "sidePanel"
+    "browsingData"
   ],
   "background": {
     "service_worker": "background.js"
@@ -17,9 +16,6 @@
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "src/features/testDataManager/testDataManager.html"
-  },
-  "side_panel": {
-    "default_path": "src/features/testDataManager/testDataManager.html"
   },
   "icons": {
     "16": "src/assets/icons/icon-16.png",

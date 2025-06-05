@@ -134,8 +134,8 @@ if (window.voisDomInspectorLoaded) {
             this.lastHoveredElement = element;
             this.updateOverlayPosition(element);
             
-            // Generate basic tooltip content
-            const elementInfo = this.generateBasicElementInfo(element);
+            // Generate enhanced tooltip content with attributes
+            const elementInfo = this.generateEnhancedElementInfo(element);
             if (this.tooltip) {
                 this.tooltip.innerHTML = elementInfo;
                 this.updateTooltipPosition(element);
@@ -213,17 +213,109 @@ if (window.voisDomInspectorLoaded) {
             }
         }
 
-        generateBasicElementInfo(element) {
+        generateEnhancedElementInfo(element) {
             const tagName = element.tagName.toLowerCase();
             const id = element.id ? `#${element.id}` : '';
             const className = element.className ? `.${element.className.toString().split(' ').slice(0, 2).join('.')}` : '';
-            const text = this.getElementText(element).substring(0, 30);
+            const text = this.getElementText(element).substring(0, 50);
+            
+            // Get important attributes
+            const attributes = this.getElementAttributes(element);
+            let attributesHtml = '';
+            
+            // Categories of attributes
+            const testingAttrs = ['id', 'name', 'data-testid', 'data-test', 'data-cy', 'data-automation-id'];
+            const accessibilityAttrs = ['role', 'aria-label', 'aria-labelledby', 'aria-describedby', 'aria-controls'];
+            const contentAttrs = ['href', 'src', 'alt', 'title', 'placeholder', 'value', 'type'];
+            
+            // Check if any of these attributes exist
+            const hasTestingAttrs = testingAttrs.some(attr => attributes[attr]);
+            const hasAccessibilityAttrs = accessibilityAttrs.some(attr => attributes[attr]);
+            const hasContentAttrs = contentAttrs.some(attr => attributes[attr]);
+            const hasText = text.length > 0;
+            
+            // Check for other aria-* attributes not in our list
+            const otherAriaAttrs = Object.keys(attributes).filter(attr => 
+                attr.startsWith('aria-') && !accessibilityAttrs.includes(attr)
+            );
+            
+            if (hasTestingAttrs || hasAccessibilityAttrs || hasContentAttrs || otherAriaAttrs.length > 0 || hasText) {
+                attributesHtml = '<div style="margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 8px;">';
+                attributesHtml += '<div style="color: #fff; margin-bottom: 4px;"><strong>Element Attributes:</strong></div>';
+                
+                // Testing attributes section
+                if (hasTestingAttrs) {
+                    attributesHtml += '<div style="margin-bottom: 6px;">';
+                    attributesHtml += '<div style="color: #FFD166; margin-bottom: 2px;"><em>Testing Identifiers:</em></div>';
+                    testingAttrs.forEach(attr => {
+                        if (attributes[attr]) {
+                            attributesHtml += `<div style="margin: 2px 0; display: flex;">
+                                <span style="color: #A5D6FF; min-width: 80px;">${attr}:</span>
+                                <span style="word-break: break-all;">${attributes[attr]}</span>
+                            </div>`;
+                        }
+                    });
+                    attributesHtml += '</div>';
+                }
+                
+                // Accessibility attributes section
+                if (hasAccessibilityAttrs || otherAriaAttrs.length > 0) {
+                    attributesHtml += '<div style="margin-bottom: 6px;">';
+                    attributesHtml += '<div style="color: #FFD166; margin-bottom: 2px;"><em>Accessibility:</em></div>';
+                    
+                    // Standard accessibility attributes
+                    accessibilityAttrs.forEach(attr => {
+                        if (attributes[attr]) {
+                            attributesHtml += `<div style="margin: 2px 0; display: flex;">
+                                <span style="color: #A5D6FF; min-width: 80px;">${attr}:</span>
+                                <span style="word-break: break-all;">${attributes[attr]}</span>
+                            </div>`;
+                        }
+                    });
+                    
+                    // Other aria-* attributes
+                    otherAriaAttrs.forEach(attr => {
+                        attributesHtml += `<div style="margin: 2px 0; display: flex;">
+                            <span style="color: #A5D6FF; min-width: 80px;">${attr}:</span>
+                            <span style="word-break: break-all;">${attributes[attr]}</span>
+                        </div>`;
+                    });
+                    
+                    attributesHtml += '</div>';
+                }
+                
+                // Content attributes section with text content
+                if (hasContentAttrs || hasText) {
+                    attributesHtml += '<div style="margin-bottom: 6px;">';
+                    attributesHtml += '<div style="color: #FFD166; margin-bottom: 2px;"><em>Content & Behavior:</em></div>';
+                    
+                    // Add text as first item if it exists
+                    if (hasText) {
+                        attributesHtml += `<div style="margin: 2px 0; display: flex;">
+                            <span style="color: #A5D6FF; min-width: 80px;">text:</span>
+                            <span style="word-break: break-all;">${text}${text.length >= 50 ? '...' : ''}</span>
+                        </div>`;
+                    }
+                    
+                    contentAttrs.forEach(attr => {
+                        if (attributes[attr]) {
+                            attributesHtml += `<div style="margin: 2px 0; display: flex;">
+                                <span style="color: #A5D6FF; min-width: 80px;">${attr}:</span>
+                                <span style="word-break: break-all;">${attributes[attr]}</span>
+                            </div>`;
+                        }
+                    });
+                    attributesHtml += '</div>';
+                }
+                
+                attributesHtml += '</div>';
+            }
             
             return `
                 <div style="margin-bottom: 8px;">
                     <strong style="color: #fff;">${tagName}${id}${className}</strong>
                 </div>
-                ${text ? `<div style="opacity: 0.9;">Text: "${text}${text.length >= 30 ? '...' : ''}"</div>` : ''}
+                ${attributesHtml}
             `;
         }
 
