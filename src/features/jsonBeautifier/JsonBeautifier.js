@@ -2,11 +2,6 @@
 (function() {
     console.log("JSON Beautifier script loaded on: " + window.location.href);
     
-    // Store original JSON and beautified version
-    let originalJson = '';
-    let beautifiedJson = '';
-    let currentView = 'beautified';
-    
     // Run immediately and also after a short delay to catch content that might load dynamically
     beautifyJsonInPage();
     
@@ -30,10 +25,6 @@
                 return;
             }
             
-            // Store the original JSON before any modifications
-            originalJson = bodyText;
-            console.log("Stored original JSON, length:", originalJson.length);
-            
             console.log("Found text content, attempting to parse as JSON");
             
             try {
@@ -41,14 +32,11 @@
                 const jsonObj = JSON.parse(bodyText);
                 console.log("Valid JSON found, beautifying...");
                 
-                // Clone the object before processing to keep original
-                const processedObj = JSON.parse(JSON.stringify(jsonObj));
-                
                 // Process nested payloads before stringify
-                processNestedPayloads(processedObj);
+                processNestedPayloads(jsonObj);
                 
                 // If successful, replace with beautified version
-                beautifiedJson = JSON.stringify(processedObj, null, 2);
+                const beautified = JSON.stringify(jsonObj, null, 2);
                 
                 // Clear the current body content
                 document.body.innerHTML = '';
@@ -61,7 +49,6 @@
                 
                 // Create a styled container
                 const container = document.createElement('div');
-                container.id = 'json-container';
                 container.style.maxWidth = '1200px';
                 container.style.margin = '0 auto';
                 container.style.padding = '20px';
@@ -69,7 +56,6 @@
                 
                 // Create a pre element for proper formatting
                 const preElement = document.createElement('pre');
-                preElement.id = 'json-display';
                 preElement.style.whiteSpace = 'pre-wrap';
                 preElement.style.fontFamily = 'Monaco, Consolas, "Courier New", monospace';
                 preElement.style.fontSize = '14px';
@@ -83,7 +69,7 @@
                 preElement.style.lineHeight = '1.5';
                 
                 // Apply syntax highlighting with custom colors
-                const highlightedJson = applySyntaxHighlighting(beautifiedJson);
+                const highlightedJson = applySyntaxHighlighting(beautified);
                 preElement.innerHTML = highlightedJson;
                 
                 // Add to container and then to body
@@ -106,50 +92,6 @@
                 const title = document.createElement('span');
                 title.textContent = 'JSON Beautifier';
                 
-                const buttonContainer = document.createElement('div');
-                buttonContainer.style.display = 'flex';
-                buttonContainer.style.gap = '10px';
-                
-                // Toggle Raw/Beautified button
-                const toggleButton = document.createElement('button');
-                toggleButton.textContent = 'Show Raw JSON';
-                toggleButton.style.padding = '6px 12px';
-                toggleButton.style.backgroundColor = '#555555';
-                toggleButton.style.color = 'white';
-                toggleButton.style.border = 'none';
-                toggleButton.style.borderRadius = '4px';
-                toggleButton.style.cursor = 'pointer';
-                toggleButton.style.fontSize = '12px';
-                toggleButton.style.fontWeight = 'bold';
-                
-                toggleButton.addEventListener('click', () => {
-                    const jsonDisplay = document.getElementById('json-display');
-                    
-                    if (currentView === 'beautified') {
-                        // Switch to raw view
-                        console.log("Switching to raw view");
-                        
-                        // Completely replace the content
-                        jsonDisplay.innerHTML = '';
-                        jsonDisplay.textContent = originalJson;
-                        
-                        toggleButton.textContent = 'Show Beautified JSON';
-                        currentView = 'raw';
-                    } else {
-                        // Switch to beautified view
-                        console.log("Switching to beautified view");
-                        
-                        // Completely replace the content
-                        jsonDisplay.textContent = '';
-                        const highlightedJson = applySyntaxHighlighting(beautifiedJson);
-                        jsonDisplay.innerHTML = highlightedJson;
-                        
-                        toggleButton.textContent = 'Show Raw JSON';
-                        currentView = 'beautified';
-                    }
-                });
-                
-                // Copy JSON button
                 const copyButton = document.createElement('button');
                 copyButton.textContent = 'Copy JSON';
                 copyButton.style.padding = '6px 12px';
@@ -162,10 +104,7 @@
                 copyButton.style.fontWeight = 'bold';
                 
                 copyButton.addEventListener('click', () => {
-                    // Copy current view
-                    const textToCopy = currentView === 'beautified' ? beautifiedJson : originalJson;
-                    
-                    navigator.clipboard.writeText(textToCopy)
+                    navigator.clipboard.writeText(beautified)
                         .then(() => {
                             copyButton.textContent = 'Copied!';
                             setTimeout(() => {
@@ -177,16 +116,12 @@
                         });
                 });
                 
-                // Add buttons to the button container
-                buttonContainer.appendChild(toggleButton);
-                buttonContainer.appendChild(copyButton);
-                
                 header.appendChild(title);
-                header.appendChild(buttonContainer);
+                header.appendChild(copyButton);
                 preElement.parentNode.insertBefore(header, preElement);
                 
                 // Set the page title
-                document.title = "JSON Beautifier";
+                document.title = "JSON Viewer";
                 
                 console.log("JSON successfully beautified");
                 
