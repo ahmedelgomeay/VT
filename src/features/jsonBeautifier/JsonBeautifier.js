@@ -178,21 +178,40 @@
     }
     
     function applySyntaxHighlighting(json) {
-        // Custom color syntax highlighting as requested
-        return json
+        // Process the JSON in correct order to prevent overlap between rules
+        
+        // First, escape HTML entities
+        let processed = json
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, function(match) {
-                // #A21515 for attribute names, #0651A5 for string values
-                const color = match.endsWith(':') ? '#A21515' : '#0651A5';
-                const fontWeight = match.endsWith(':') ? 'bold' : 'normal';
-                return `<span style="color:${color};font-weight:${fontWeight}">${match}</span>`;
-            })
-            // #0651A5 and bold for boolean and null values
+            .replace(/>/g, '&gt;');
+            
+        // Store all string matches to protect them
+        const stringMatches = [];
+        processed = processed.replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, function(match) {
+            // #A21515 for attribute names, #0651A5 for string values
+            const color = match.endsWith(':') ? '#A21515' : '#0651A5';
+            const fontWeight = match.endsWith(':') ? 'bold' : 'normal';
+            const highlighted = `<span style="color:${color};font-weight:${fontWeight}">${match}</span>`;
+            
+            // Store the highlighted string
+            const placeholder = `__STRING_PLACEHOLDER_${stringMatches.length}__`;
+            stringMatches.push(highlighted);
+            return placeholder;
+        });
+        
+        // Process non-string content (booleans, nulls, numbers)
+        processed = processed
             .replace(/\b(true|false)\b/g, '<span style="color:#0651A5;font-weight:bold">$1</span>')
             .replace(/\b(null)\b/g, '<span style="color:#0651A5;font-weight:bold">$1</span>')
-            // #0B8658 for numeric values
             .replace(/\b(-?\d+(\.\d+)?([eE][+-]?\d+)?)\b/g, '<span style="color:#0B8658">$1</span>');
+            
+        // Restore string placeholders
+        stringMatches.forEach((highlighted, index) => {
+            const placeholder = `__STRING_PLACEHOLDER_${index}__`;
+            processed = processed.replace(placeholder, highlighted);
+        });
+        
+        return processed;
     }
 })(); 
