@@ -61,6 +61,7 @@
                 
                 // Create a styled container
                 const container = document.createElement('div');
+                container.id = 'json-container';
                 container.style.maxWidth = '1200px';
                 container.style.margin = '0 auto';
                 container.style.padding = '20px';
@@ -123,19 +124,26 @@
                 
                 toggleButton.addEventListener('click', () => {
                     const jsonDisplay = document.getElementById('json-display');
+                    
                     if (currentView === 'beautified') {
                         // Switch to raw view
-                        console.log("Switching to raw view, original JSON length:", originalJson.length);
-                        // Important: Just set textContent, not innerHTML, to avoid any HTML interpretation
-                        jsonDisplay.innerHTML = ''; // Clear first
+                        console.log("Switching to raw view");
+                        
+                        // Completely replace the content
+                        jsonDisplay.innerHTML = '';
                         jsonDisplay.textContent = originalJson;
+                        
                         toggleButton.textContent = 'Show Beautified JSON';
                         currentView = 'raw';
                     } else {
                         // Switch to beautified view
                         console.log("Switching to beautified view");
-                        jsonDisplay.textContent = ''; // Clear first
-                        jsonDisplay.innerHTML = applySyntaxHighlighting(beautifiedJson);
+                        
+                        // Completely replace the content
+                        jsonDisplay.textContent = '';
+                        const highlightedJson = applySyntaxHighlighting(beautifiedJson);
+                        jsonDisplay.innerHTML = highlightedJson;
+                        
                         toggleButton.textContent = 'Show Raw JSON';
                         currentView = 'beautified';
                     }
@@ -176,13 +184,6 @@
                 header.appendChild(title);
                 header.appendChild(buttonContainer);
                 preElement.parentNode.insertBefore(header, preElement);
-                
-                // Store raw JSON in a hidden element
-                const rawJsonStorage = document.createElement('div');
-                rawJsonStorage.id = 'raw-json-storage';
-                rawJsonStorage.style.display = 'none';
-                rawJsonStorage.textContent = originalJson;
-                document.body.appendChild(rawJsonStorage);
                 
                 // Set the page title
                 document.title = "JSON Beautifier";
