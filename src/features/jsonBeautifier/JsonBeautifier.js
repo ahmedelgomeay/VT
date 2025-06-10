@@ -17,46 +17,52 @@
         try {
             console.log("Looking for JSON content to beautify");
             
-            // Find all elements in the body that might contain JSON
-            const elements = document.querySelectorAll('body > p, pre, div, span');
+            // Find all paragraphs in the body that might contain JSON
+            const paragraphs = document.querySelectorAll('body > p, pre, div, span');
             
-            if (elements.length === 0) {
+            if (paragraphs.length === 0) {
                 console.log('No potential JSON containers found');
                 return;
             }
             
-            console.log(`Found ${elements.length} potential JSON containers`);
+            console.log(`Found ${paragraphs.length} potential JSON containers`);
             let beautifiedCount = 0;
             
             // Process each potential container
-            elements.forEach(element => {
-                // Get exact text with whitespace preserved
-                const originalText = element.textContent;
+            paragraphs.forEach(element => {
+                const text = element.textContent.trim();
                 
                 // Skip if empty
-                if (!originalText.trim()) return;
+                if (!text) return;
                 
                 try {
-                    // Try to parse as JSON (just to validate it's actually JSON)
-                    JSON.parse(originalText);
-                    console.log("Valid JSON found");
+                    // Try to parse as JSON
+                    const jsonObj = JSON.parse(text);
+                    console.log("Valid JSON found:", typeof jsonObj);
                     
-                    // Create wrapper with background only
-                    const wrapper = document.createElement('div');
-                    wrapper.style.backgroundColor = '#f5f5f5';
-                    wrapper.style.padding = '10px';
+                    // If successful, replace with beautified version
+                    const beautified = JSON.stringify(jsonObj, null, 2);
                     
-                    // Keep the original element to preserve all formatting
-                    element.style.fontFamily = 'monospace';
-                    element.style.margin = '0';
-                    element.style.padding = '0';
+                    // Create a pre element for proper formatting
+                    const preElement = document.createElement('pre');
+                    preElement.style.whiteSpace = 'pre-wrap';
+                    preElement.style.fontFamily = 'monospace';
+                    preElement.style.fontSize = '14px';
+                    preElement.style.backgroundColor = '#f5f5f5';
+                    preElement.style.padding = '15px';
+                    preElement.style.borderRadius = '5px';
+                    preElement.style.border = '1px solid #ddd';
+                    preElement.style.overflow = 'auto';
+                    preElement.style.maxHeight = '80vh';
+                    preElement.style.margin = '20px';
+                    preElement.style.lineHeight = '1.5';
                     
-                    // Apply syntax highlighting directly to the content
-                    element.innerHTML = applySyntaxHighlighting(originalText);
+                    // Apply syntax highlighting
+                    const highlightedJson = applySyntaxHighlighting(beautified);
+                    preElement.innerHTML = highlightedJson;
                     
-                    // Wrap the original element to add background
-                    element.parentNode.replaceChild(wrapper, element);
-                    wrapper.appendChild(element);
+                    // Replace the original element with the pre element
+                    element.parentNode.replaceChild(preElement, element);
                     
                     beautifiedCount++;
                 } catch (e) {
