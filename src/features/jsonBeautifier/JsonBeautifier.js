@@ -36,23 +36,20 @@
                 if (!text) return;
                 
                 try {
-                    // Try to parse as JSON
-                    const jsonObj = JSON.parse(text);
-                    console.log("Valid JSON found:", typeof jsonObj);
-                    
-                    // If successful, replace with beautified version
-                    const beautified = JSON.stringify(jsonObj, null, 2);
+                    // Try to parse as JSON (just to validate it's actually JSON)
+                    JSON.parse(text);
+                    console.log("Valid JSON found");
                     
                     // Create a pre element for proper formatting
                     const preElement = document.createElement('pre');
-                    preElement.style.whiteSpace = 'pre-wrap';
+                    preElement.style.whiteSpace = 'pre';
                     preElement.style.fontFamily = 'monospace';
                     preElement.style.fontSize = '14px';
                     preElement.style.backgroundColor = '#f5f5f5';
                     preElement.style.padding = '10px';
                     
-                    // Apply syntax highlighting
-                    const highlightedJson = applySyntaxHighlighting(beautified);
+                    // Apply syntax highlighting to the original text
+                    const highlightedJson = applySyntaxHighlighting(text);
                     preElement.innerHTML = highlightedJson;
                     
                     // Replace the original element with the pre element
