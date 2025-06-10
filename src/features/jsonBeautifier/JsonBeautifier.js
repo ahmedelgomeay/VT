@@ -2,6 +2,11 @@
 (function() {
     console.log("JSON Beautifier script loaded on: " + window.location.href);
     
+    // Store original JSON and beautified version
+    let originalJson = '';
+    let beautifiedJson = '';
+    let currentView = 'beautified';
+    
     // Run immediately and also after a short delay to catch content that might load dynamically
     beautifyJsonInPage();
     
@@ -25,6 +30,9 @@
                 return;
             }
             
+            // Store the original JSON
+            originalJson = bodyText;
+            
             console.log("Found text content, attempting to parse as JSON");
             
             try {
@@ -36,7 +44,7 @@
                 processNestedPayloads(jsonObj);
                 
                 // If successful, replace with beautified version
-                const beautified = JSON.stringify(jsonObj, null, 2);
+                beautifiedJson = JSON.stringify(jsonObj, null, 2);
                 
                 // Clear the current body content
                 document.body.innerHTML = '';
@@ -56,6 +64,7 @@
                 
                 // Create a pre element for proper formatting
                 const preElement = document.createElement('pre');
+                preElement.id = 'json-display';
                 preElement.style.whiteSpace = 'pre-wrap';
                 preElement.style.fontFamily = 'Monaco, Consolas, "Courier New", monospace';
                 preElement.style.fontSize = '14px';
@@ -69,7 +78,7 @@
                 preElement.style.lineHeight = '1.5';
                 
                 // Apply syntax highlighting with custom colors
-                const highlightedJson = applySyntaxHighlighting(beautified);
+                const highlightedJson = applySyntaxHighlighting(beautifiedJson);
                 preElement.innerHTML = highlightedJson;
                 
                 // Add to container and then to body
@@ -90,8 +99,40 @@
                 header.style.borderBottom = '1px solid #e0e0e0';
                 
                 const title = document.createElement('span');
-                title.textContent = 'JSON Viewer';
+                title.textContent = 'JSON Beautifier';
                 
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.gap = '10px';
+                
+                // Toggle Raw/Beautified button
+                const toggleButton = document.createElement('button');
+                toggleButton.textContent = 'Show Raw JSON';
+                toggleButton.style.padding = '6px 12px';
+                toggleButton.style.backgroundColor = '#555555';
+                toggleButton.style.color = 'white';
+                toggleButton.style.border = 'none';
+                toggleButton.style.borderRadius = '4px';
+                toggleButton.style.cursor = 'pointer';
+                toggleButton.style.fontSize = '12px';
+                toggleButton.style.fontWeight = 'bold';
+                
+                toggleButton.addEventListener('click', () => {
+                    const jsonDisplay = document.getElementById('json-display');
+                    if (currentView === 'beautified') {
+                        // Switch to raw view
+                        jsonDisplay.textContent = originalJson;
+                        toggleButton.textContent = 'Show Beautified JSON';
+                        currentView = 'raw';
+                    } else {
+                        // Switch to beautified view
+                        jsonDisplay.innerHTML = applySyntaxHighlighting(beautifiedJson);
+                        toggleButton.textContent = 'Show Raw JSON';
+                        currentView = 'beautified';
+                    }
+                });
+                
+                // Copy JSON button
                 const copyButton = document.createElement('button');
                 copyButton.textContent = 'Copy JSON';
                 copyButton.style.padding = '6px 12px';
@@ -104,7 +145,10 @@
                 copyButton.style.fontWeight = 'bold';
                 
                 copyButton.addEventListener('click', () => {
-                    navigator.clipboard.writeText(beautified)
+                    // Copy current view
+                    const textToCopy = currentView === 'beautified' ? beautifiedJson : originalJson;
+                    
+                    navigator.clipboard.writeText(textToCopy)
                         .then(() => {
                             copyButton.textContent = 'Copied!';
                             setTimeout(() => {
@@ -116,12 +160,16 @@
                         });
                 });
                 
+                // Add buttons to the button container
+                buttonContainer.appendChild(toggleButton);
+                buttonContainer.appendChild(copyButton);
+                
                 header.appendChild(title);
-                header.appendChild(copyButton);
+                header.appendChild(buttonContainer);
                 preElement.parentNode.insertBefore(header, preElement);
                 
                 // Set the page title
-                document.title = "JSON Viewer";
+                document.title = "JSON Beautifier";
                 
                 console.log("JSON successfully beautified");
                 
