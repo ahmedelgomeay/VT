@@ -32,6 +32,9 @@
                 const jsonObj = JSON.parse(bodyText);
                 console.log("Valid JSON found, beautifying...");
                 
+                // Process nested payloads before stringify
+                processNestedPayloads(jsonObj);
+                
                 // If successful, replace with beautified version
                 const beautified = JSON.stringify(jsonObj, null, 2);
                 
@@ -127,6 +130,50 @@
             }
         } catch (e) {
             console.error('Error while beautifying JSON:', e);
+        }
+    }
+    
+    // Function to process nested payloads in the JSON object
+    function processNestedPayloads(obj) {
+        if (!obj || typeof obj !== 'object') return;
+        
+        for (const key in obj) {
+            // Process payloads and other attributes that might contain JSON strings
+            if ((key === 'payload' || key === 'data' || key === 'body' || key === 'content') && 
+                typeof obj[key] === 'string') {
+                try {
+                    // Try to parse the string as JSON
+                    const parsed = JSON.parse(obj[key]);
+                    // If successful, replace with the parsed object
+                    obj[key] = parsed;
+                    
+                    // Recursively process the newly parsed object
+                    processNestedPayloads(parsed);
+                } catch (e) {
+                    // Not valid JSON, leave as is
+                    console.log(`Failed to parse nested JSON in ${key}:`, e.message);
+                }
+            } 
+            // Handle backslash escaped JSON strings
+            else if (typeof obj[key] === 'string' && 
+                    (obj[key].includes('\\\"') || obj[key].includes('\\\\') || obj[key].includes('\\\\'))) {
+                try {
+                    // Try to parse the string by replacing escaped quotes
+                    const unescaped = obj[key].replace(/\\\"/g, '"').replace(/\\\\/g, '\\');
+                    const parsed = JSON.parse(unescaped);
+                    // If successful, replace with the parsed object
+                    obj[key] = parsed;
+                    
+                    // Recursively process the newly parsed object
+                    processNestedPayloads(parsed);
+                } catch (e) {
+                    // Not valid JSON after unescaping, leave as is
+                }
+            }
+            // Recursively process nested objects and arrays
+            else if (typeof obj[key] === 'object') {
+                processNestedPayloads(obj[key]);
+            }
         }
     }
     
