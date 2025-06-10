@@ -126,12 +126,15 @@
                     if (currentView === 'beautified') {
                         // Switch to raw view
                         console.log("Switching to raw view, original JSON length:", originalJson.length);
+                        // Important: Just set textContent, not innerHTML, to avoid any HTML interpretation
+                        jsonDisplay.innerHTML = ''; // Clear first
                         jsonDisplay.textContent = originalJson;
                         toggleButton.textContent = 'Show Beautified JSON';
                         currentView = 'raw';
                     } else {
                         // Switch to beautified view
                         console.log("Switching to beautified view");
+                        jsonDisplay.textContent = ''; // Clear first
                         jsonDisplay.innerHTML = applySyntaxHighlighting(beautifiedJson);
                         toggleButton.textContent = 'Show Raw JSON';
                         currentView = 'beautified';
