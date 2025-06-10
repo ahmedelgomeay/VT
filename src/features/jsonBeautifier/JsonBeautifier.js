@@ -178,21 +178,29 @@
     }
     
     function applySyntaxHighlighting(json) {
-        // Custom color syntax highlighting as requested
-        return json
+        // Process the JSON string in a specific order to avoid highlighting conflicts
+        let highlighted = json
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, function(match) {
-                // #A21515 for attribute names, #0651A5 for string values
-                const color = match.endsWith(':') ? '#A21515' : '#0651A5';
-                const fontWeight = match.endsWith(':') ? 'bold' : 'normal';
-                return `<span style="color:${color};font-weight:${fontWeight}">${match}</span>`;
-            })
+            .replace(/>/g, '&gt;');
+        
+        // First, handle all strings (both keys and values)
+        // This ensures numbers inside strings won't be processed separately
+        highlighted = highlighted.replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, function(match) {
+            // #A21515 for attribute names, #0651A5 for string values
+            const color = match.endsWith(':') ? '#A21515' : '#0651A5';
+            const fontWeight = match.endsWith(':') ? 'bold' : 'normal';
+            return `<span style="color:${color};font-weight:${fontWeight}">${match}</span>`;
+        });
+        
+        // After handling strings, highlight booleans, null, and standalone numbers
+        highlighted = highlighted
             // #0651A5 and bold for boolean and null values
             .replace(/\b(true|false)\b/g, '<span style="color:#0651A5;font-weight:bold">$1</span>')
             .replace(/\b(null)\b/g, '<span style="color:#0651A5;font-weight:bold">$1</span>')
-            // #0B8658 for numeric values
-            .replace(/\b(-?\d+(\.\d+)?([eE][+-]?\d+)?)\b/g, '<span style="color:#0B8658">$1</span>');
+            // #0B8658 for numeric values - but only those not inside HTML tags
+            .replace(/(?<!(span style="color:)[\s\S]*?)(-?\d+(\.\d+)?([eE][+-]?\d+)?)\b/g, '<span style="color:#0B8658">$2</span>');
+        
+        return highlighted;
     }
 })(); 
