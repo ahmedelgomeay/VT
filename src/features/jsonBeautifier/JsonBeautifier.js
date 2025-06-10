@@ -178,92 +178,21 @@
     }
     
     function applySyntaxHighlighting(json) {
-        // Completely rewritten approach using a token-based parser
-        
-        // First, escape HTML characters
-        let result = json
+        // Custom color syntax highlighting as requested
+        return json
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-        
-        // Create an array to hold the token parts
-        const tokens = [];
-        let currentIndex = 0;
-        
-        // Step 1: Tokenize the JSON string to safely identify all parts
-        // This regex finds strings (including keys), numbers, booleans, nulls, and structural characters
-        const tokenRegex = /"(?:\\.|[^"\\])*"(?=\s*:)?|"(?:\\.|[^"\\])*"|true|false|null|-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?|[{}\[\],:]|\s+/g;
-        
-        // Find all tokens
-        let match;
-        while ((match = tokenRegex.exec(result)) !== null) {
-            // Add any text before this token
-            if (match.index > currentIndex) {
-                tokens.push({
-                    type: 'text',
-                    value: result.substring(currentIndex, match.index)
-                });
-            }
-            
-            const value = match[0];
-            
-            // Determine token type
-            let type;
-            if (value.startsWith('"') && value.endsWith(':')) {
-                type = 'key'; // Property key
-            } else if (value.startsWith('"')) {
-                type = 'string'; // String value
-            } else if (value === 'true' || value === 'false') {
-                type = 'boolean';
-            } else if (value === 'null') {
-                type = 'null';
-            } else if (/^-?\d/.test(value)) {
-                type = 'number';
-            } else if (/^[{}\[\],:]$/.test(value)) {
-                type = 'punctuation';
-            } else {
-                type = 'whitespace';
-            }
-            
-            tokens.push({ type, value });
-            currentIndex = match.index + value.length;
-        }
-        
-        // Add any remaining text
-        if (currentIndex < result.length) {
-            tokens.push({
-                type: 'text',
-                value: result.substring(currentIndex)
-            });
-        }
-        
-        // Step 2: Rebuild the string with syntax highlighting
-        let highlightedResult = '';
-        tokens.forEach(token => {
-            switch(token.type) {
-                case 'key':
-                    // Remove the trailing colon for highlighting, then add it back
-                    const keyText = token.value.endsWith(':') 
-                        ? token.value.substring(0, token.value.length - 1)
-                        : token.value;
-                    const colonPart = token.value.endsWith(':') ? ':' : '';
-                    highlightedResult += `<span style="color:#A21515;font-weight:bold">${keyText}</span>${colonPart}`;
-                    break;
-                case 'string':
-                    highlightedResult += `<span style="color:#0651A5">${token.value}</span>`;
-                    break;
-                case 'boolean':
-                case 'null':
-                    highlightedResult += `<span style="color:#0651A5;font-weight:bold">${token.value}</span>`;
-                    break;
-                case 'number':
-                    highlightedResult += `<span style="color:#0B8658">${token.value}</span>`;
-                    break;
-                default:
-                    highlightedResult += token.value;
-            }
-        });
-        
-        return highlightedResult;
+            .replace(/>/g, '&gt;')
+            .replace(/"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?/g, function(match) {
+                // #A21515 for attribute names, #0651A5 for string values
+                const color = match.endsWith(':') ? '#A21515' : '#0651A5';
+                const fontWeight = match.endsWith(':') ? 'bold' : 'normal';
+                return `<span style="color:${color};font-weight:${fontWeight}">${match}</span>`;
+            })
+            // #0651A5 and bold for boolean and null values
+            .replace(/\b(true|false)\b/g, '<span style="color:#0651A5;font-weight:bold">$1</span>')
+            .replace(/\b(null)\b/g, '<span style="color:#0651A5;font-weight:bold">$1</span>')
+            // #0B8658 for numeric values
+            .replace(/\b(-?\d+(\.\d+)?([eE][+-]?\d+)?)\b/g, '<span style="color:#0B8658">$1</span>');
     }
 })(); 
