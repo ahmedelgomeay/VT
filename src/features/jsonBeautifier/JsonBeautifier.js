@@ -41,22 +41,11 @@
                     JSON.parse(originalText);
                     console.log("Valid JSON found");
                     
-                    // Create wrapper with background only
-                    const wrapper = document.createElement('div');
-                    wrapper.style.backgroundColor = '#f5f5f5';
-                    wrapper.style.padding = '10px';
-                    
-                    // Keep the original element to preserve all formatting
-                    element.style.fontFamily = 'monospace';
-                    element.style.margin = '0';
-                    element.style.padding = '0';
+                    // Simply add background to the original element
+                    element.style.backgroundColor = '#f5f5f5';
                     
                     // Apply syntax highlighting directly to the content
                     element.innerHTML = applySyntaxHighlighting(originalText);
-                    
-                    // Wrap the original element to add background
-                    element.parentNode.replaceChild(wrapper, element);
-                    wrapper.appendChild(element);
                     
                     beautifiedCount++;
                 } catch (e) {
