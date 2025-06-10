@@ -30,8 +30,9 @@
                 return;
             }
             
-            // Store the original JSON
+            // Store the original JSON before any modifications
             originalJson = bodyText;
+            console.log("Stored original JSON, length:", originalJson.length);
             
             console.log("Found text content, attempting to parse as JSON");
             
@@ -40,11 +41,14 @@
                 const jsonObj = JSON.parse(bodyText);
                 console.log("Valid JSON found, beautifying...");
                 
+                // Clone the object before processing to keep original
+                const processedObj = JSON.parse(JSON.stringify(jsonObj));
+                
                 // Process nested payloads before stringify
-                processNestedPayloads(jsonObj);
+                processNestedPayloads(processedObj);
                 
                 // If successful, replace with beautified version
-                beautifiedJson = JSON.stringify(jsonObj, null, 2);
+                beautifiedJson = JSON.stringify(processedObj, null, 2);
                 
                 // Clear the current body content
                 document.body.innerHTML = '';
@@ -121,11 +125,13 @@
                     const jsonDisplay = document.getElementById('json-display');
                     if (currentView === 'beautified') {
                         // Switch to raw view
+                        console.log("Switching to raw view, original JSON length:", originalJson.length);
                         jsonDisplay.textContent = originalJson;
                         toggleButton.textContent = 'Show Beautified JSON';
                         currentView = 'raw';
                     } else {
                         // Switch to beautified view
+                        console.log("Switching to beautified view");
                         jsonDisplay.innerHTML = applySyntaxHighlighting(beautifiedJson);
                         toggleButton.textContent = 'Show Raw JSON';
                         currentView = 'beautified';
@@ -167,6 +173,13 @@
                 header.appendChild(title);
                 header.appendChild(buttonContainer);
                 preElement.parentNode.insertBefore(header, preElement);
+                
+                // Store raw JSON in a hidden element
+                const rawJsonStorage = document.createElement('div');
+                rawJsonStorage.id = 'raw-json-storage';
+                rawJsonStorage.style.display = 'none';
+                rawJsonStorage.textContent = originalJson;
+                document.body.appendChild(rawJsonStorage);
                 
                 // Set the page title
                 document.title = "JSON Beautifier";
