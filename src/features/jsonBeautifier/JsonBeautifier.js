@@ -49,13 +49,7 @@
                     preElement.style.fontFamily = 'monospace';
                     preElement.style.fontSize = '14px';
                     preElement.style.backgroundColor = '#f5f5f5';
-                    preElement.style.padding = '15px';
-                    preElement.style.borderRadius = '5px';
-                    preElement.style.border = '1px solid #ddd';
-                    preElement.style.overflow = 'auto';
-                    preElement.style.maxHeight = '80vh';
-                    preElement.style.margin = '20px';
-                    preElement.style.lineHeight = '1.5';
+                    preElement.style.padding = '10px';
                     
                     // Apply syntax highlighting
                     const highlightedJson = applySyntaxHighlighting(beautified);
