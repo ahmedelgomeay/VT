@@ -1,25 +1,36 @@
 // Content script for beautifying JSON on about:blank pages
 (function() {
-    // Only run on about:blank pages
-    if (window.location.href === 'about:blank') {
-        beautifyJsonInPage();
+    console.log("JSON Beautifier script loaded on: " + window.location.href);
+    
+    // Run immediately and also after a slight delay to catch content that might load dynamically
+    beautifyJsonInPage();
+    
+    // Also wait for DOM content to be fully loaded
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", beautifyJsonInPage);
     }
+    
+    // Add another check after a delay to catch any delayed content
+    setTimeout(beautifyJsonInPage, 500);
 
     function beautifyJsonInPage() {
         try {
+            console.log("Looking for JSON content to beautify");
+            
             // Find all paragraphs in the body that might contain JSON
-            const paragraphs = document.querySelectorAll('body > p');
+            const paragraphs = document.querySelectorAll('body > p, pre, div, span');
             
             if (paragraphs.length === 0) {
-                console.log('No paragraphs found to beautify');
+                console.log('No potential JSON containers found');
                 return;
             }
             
+            console.log(`Found ${paragraphs.length} potential JSON containers`);
             let beautifiedCount = 0;
             
-            // Process each paragraph
-            paragraphs.forEach(paragraph => {
-                const text = paragraph.textContent.trim();
+            // Process each potential container
+            paragraphs.forEach(element => {
+                const text = element.textContent.trim();
                 
                 // Skip if empty
                 if (!text) return;
@@ -27,6 +38,7 @@
                 try {
                     // Try to parse as JSON
                     const jsonObj = JSON.parse(text);
+                    console.log("Valid JSON found:", typeof jsonObj);
                     
                     // If successful, replace with beautified version
                     const beautified = JSON.stringify(jsonObj, null, 2);
@@ -49,15 +61,17 @@
                     const highlightedJson = applySyntaxHighlighting(beautified);
                     preElement.innerHTML = highlightedJson;
                     
-                    // Replace the paragraph with the pre element
-                    paragraph.parentNode.replaceChild(preElement, paragraph);
+                    // Replace the original element with the pre element
+                    element.parentNode.replaceChild(preElement, element);
                     
                     beautifiedCount++;
                 } catch (e) {
                     // Not valid JSON, leave it as is
-                    console.log('Paragraph does not contain valid JSON');
+                    console.log('Not valid JSON:', e.message);
                 }
             });
+            
+            console.log(`Beautified ${beautifiedCount} JSON objects`);
             
             if (beautifiedCount > 0) {
                 // Add a subtle indication that beautification occurred
@@ -71,7 +85,7 @@
                 notice.style.borderRadius = '4px';
                 notice.style.fontSize = '12px';
                 notice.style.opacity = '0.8';
-                notice.style.zIndex = '999';
+                notice.style.zIndex = '999999';
                 notice.textContent = `Beautified ${beautifiedCount} JSON object${beautifiedCount !== 1 ? 's' : ''}`;
                 
                 document.body.appendChild(notice);
