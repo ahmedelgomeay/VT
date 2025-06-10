@@ -17,35 +17,46 @@
         try {
             console.log("Looking for JSON content to beautify");
             
-            // Find all elements in the body that might contain JSON
-            const elements = document.querySelectorAll('body > p, pre, div, span');
+            // Find all paragraphs in the body that might contain JSON
+            const paragraphs = document.querySelectorAll('body > p, pre, div, span');
             
-            if (elements.length === 0) {
+            if (paragraphs.length === 0) {
                 console.log('No potential JSON containers found');
                 return;
             }
             
-            console.log(`Found ${elements.length} potential JSON containers`);
+            console.log(`Found ${paragraphs.length} potential JSON containers`);
             let beautifiedCount = 0;
             
             // Process each potential container
-            elements.forEach(element => {
-                // Get exact text with whitespace preserved
-                const originalText = element.textContent;
+            paragraphs.forEach(element => {
+                const text = element.textContent.trim();
                 
                 // Skip if empty
-                if (!originalText.trim()) return;
+                if (!text) return;
                 
                 try {
-                    // Try to parse as JSON (just to validate it's actually JSON)
-                    JSON.parse(originalText);
-                    console.log("Valid JSON found");
+                    // Try to parse as JSON
+                    const jsonObj = JSON.parse(text);
+                    console.log("Valid JSON found:", typeof jsonObj);
                     
-                    // Simply add background to the original element
-                    element.style.backgroundColor = '#f5f5f5';
+                    // If successful, replace with beautified version
+                    const beautified = JSON.stringify(jsonObj, null, 2);
                     
-                    // Apply syntax highlighting directly to the content
-                    element.innerHTML = applySyntaxHighlighting(originalText);
+                    // Create a pre element for proper formatting
+                    const preElement = document.createElement('pre');
+                    preElement.style.whiteSpace = 'pre-wrap';
+                    preElement.style.fontFamily = 'monospace';
+                    preElement.style.fontSize = '14px';
+                    preElement.style.backgroundColor = '#f5f5f5';
+                    preElement.style.padding = '10px';
+                    
+                    // Apply syntax highlighting
+                    const highlightedJson = applySyntaxHighlighting(beautified);
+                    preElement.innerHTML = highlightedJson;
+                    
+                    // Replace the original element with the pre element
+                    element.parentNode.replaceChild(preElement, element);
                     
                     beautifiedCount++;
                 } catch (e) {
