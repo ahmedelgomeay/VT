@@ -6,11 +6,12 @@
  * where users can create, rename, and manage multiple notes, saved to local storage.
  * 
  * @author VOIS Test Data Extension Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import ToastManager from "../../../utils/ToastManager.js";
-import { NpmNotesEditorIntegration } from "../../../utils/tiptap/NpmNotesEditorIntegration.js";
+// Direct Tiptap imports instead of adapter
+// We need to add script tags for these in the HTML
 
 /**
  * Storage keys for managing notes data in Chrome storage
@@ -42,9 +43,7 @@ class NotesManager {
     this.autoSaveDelay = 1000; // Auto-save after 1 second of inactivity
     this.lastToggleTime = 0; // Track last time notes was toggled
     this.toggleCooldown = 300; // Cooldown period in ms to prevent rapid toggles
-
-    // Initialize the TipTap editor integration
-    this.editorIntegration = new NpmNotesEditorIntegration();
+    this.tiptapEditors = {}; // Store references to TipTap editors by tab ID
 
     // Initialize DOM elements
     this.notesBtn = null;
@@ -77,17 +76,128 @@ class NotesManager {
    * This is the main entry point after creating an instance.
    */
   init() {
+    // Load TipTap CSS
+    this.loadTiptapStyles();
+    
     this.createNotesButton();
     this.createNotesContainer();
     this.loadNotesData();
     this.setupEventListeners();
     
-    // Don't initialize the editor integration until notes are opened
-    // this.editorIntegration.init();
-    
     // Ensure notes are not visible initially
     this.isNotesVisible = false;
     this.notesContainer.classList.remove('active');
+  }
+  
+  /**
+   * Initializes the NotesManager in standalone mode (full window)
+   * Used when opened in a new tab
+   */
+  initStandalone() {
+    // Load TipTap CSS
+    this.loadTiptapStyles();
+    
+    // Skip creating the button as we're in a tab
+    this.createNotesContainer();
+    this.loadNotesData();
+    
+    // Simplified event listeners for standalone mode
+    this.setupStandaloneEventListeners();
+    
+    // Make sure container is visible
+    this.notesContainer.classList.add('active');
+    this.isNotesVisible = true;
+    
+    // Set the close button to go back in history instead of hiding
+    if (this.closeBtn) {
+      this.closeBtn.removeEventListener('click', this.closeNotes);
+      this.closeBtn.addEventListener('click', () => {
+        // Save before closing
+        this.saveNotes();
+        window.close();
+      });
+    }
+  }
+  
+  /**
+   * Sets up event listeners for standalone mode
+   */
+  setupStandaloneEventListeners() {
+    // New tab button click
+    this.newTabBtn.addEventListener('click', this.createNewTab);
+    
+    // Save button in rename modal
+    this.tabRenameSave.addEventListener('click', this.renameTab);
+    
+    // Cancel button in rename modal
+    this.tabRenameCancel.addEventListener('click', this.cancelRename);
+    
+    // Enter key in rename field
+    this.tabRenameField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        this.renameTab();
+      } else if (e.key === 'Escape') {
+        this.cancelRename();
+      }
+    });
+    
+    // Set up tab scrolling
+    this.setupTabDragScrolling();
+    
+    // Auto-save on beforeunload
+    window.addEventListener('beforeunload', () => {
+      this.saveNotes();
+    });
+  }
+  
+  /**
+   * Loads the Tiptap CSS styles and Notes Manager styles
+   */
+  loadTiptapStyles() {
+    if (!document.getElementById('tiptap-styles')) {
+      const tiptapStyles = document.createElement('link');
+      tiptapStyles.id = 'tiptap-styles';
+      tiptapStyles.rel = 'stylesheet';
+      // Using styles directly from the Tiptap project
+      tiptapStyles.href = chrome.runtime.getURL('src/utils/tiptap/tiptap.css');
+      document.head.appendChild(tiptapStyles);
+    }
+    
+    if (!document.getElementById('notes-manager-styles')) {
+      const notesStyles = document.createElement('link');
+      notesStyles.id = 'notes-manager-styles';
+      notesStyles.rel = 'stylesheet';
+      notesStyles.href = chrome.runtime.getURL('src/features/utilityButtons/notesManager/NotesManager.css');
+      document.head.appendChild(notesStyles);
+    }
+    
+    // Load Tiptap library scripts if not already loaded
+    this.loadTiptapScripts();
+  }
+  
+  /**
+   * Loads necessary Tiptap script tags if not already loaded
+   */
+  loadTiptapScripts() {
+    // Check if Tiptap is already loaded
+    if (window.tiptap) {
+      return;
+    }
+    
+    // Core Tiptap scripts
+    const scriptSources = [
+      'dist/tiptap.umd.js',
+      'dist/tiptap-starter-kit.umd.js'
+    ];
+    
+    scriptSources.forEach(src => {
+      if (!document.querySelector(`script[src*="${src}"]`)) {
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL(src);
+        script.async = false;
+        document.head.appendChild(script);
+      }
+    });
   }
 
   /**
@@ -384,7 +494,7 @@ class NotesManager {
   }
 
   /**
-   * Handles editor content updates
+   * Handles the update event from a textarea
    * @param {string} tabId - The ID of the tab that changed
    * @param {string} content - The new content
    */
@@ -399,7 +509,7 @@ class NotesManager {
   }
 
   /**
-   * Auto-saves the content of a specific editor
+   * Auto-saves the content of a specific textarea
    * @param {string} tabId - The ID of the tab that changed
    * @param {string} content - The content to save
    */
@@ -547,19 +657,29 @@ class NotesManager {
     // Clear existing content
     this.notesContent.innerHTML = '';
     
+    // Destroy any existing editors
+    Object.values(this.tiptapEditors).forEach(editor => {
+      if (editor && editor.destroy) {
+        editor.destroy();
+      }
+    });
+    this.tiptapEditors = {};
+    
     // Create content for each tab
     this.notesData.forEach(tab => {
       const contentElement = document.createElement('div');
       contentElement.className = 'tab-content';
       contentElement.dataset.tabId = tab.id;
       
-      const textarea = document.createElement('textarea');
-      textarea.className = 'notes-textarea';
-      textarea.placeholder = 'Write your notes here...';
-      textarea.value = tab.content || '';
+      // Create editor container
+      const editorContainer = document.createElement('div');
+      editorContainer.className = 'tiptap-editor-container';
       
-      contentElement.appendChild(textarea);
+      contentElement.appendChild(editorContainer);
       this.notesContent.appendChild(contentElement);
+      
+      // Create TipTap editor
+      this.initTiptapEditor(tab.id, editorContainer, tab.content || '');
     });
     
     // Activate the active tab
@@ -568,6 +688,160 @@ class NotesManager {
     } else if (this.notesData.length > 0) {
       this.activateTab(this.notesData[0].id);
     }
+  }
+  
+  /**
+   * Initializes a TipTap editor for a specific tab
+   * @param {string} tabId - The ID of the tab
+   * @param {HTMLElement} container - The container element for the editor
+   * @param {string} content - The initial content for the editor
+   */
+  initTiptapEditor(tabId, container, content) {
+    try {
+      // Check if Tiptap is loaded
+      if (!window.tiptap) {
+        throw new Error('Tiptap library not loaded');
+      }
+      
+      // Clear container first
+      container.innerHTML = '';
+      
+      // Create editor element
+      const editorElement = document.createElement('div');
+      editorElement.className = 'tiptap-editor';
+      container.appendChild(editorElement);
+      
+      // Create toolbar element
+      const toolbarElement = document.createElement('div');
+      toolbarElement.className = 'tiptap-toolbar';
+      container.insertBefore(toolbarElement, editorElement);
+      
+      // Populate toolbar with basic formatting options
+      toolbarElement.innerHTML = `
+        <button class="tiptap-button" data-action="bold" title="Bold">B</button>
+        <button class="tiptap-button" data-action="italic" title="Italic"><i>I</i></button>
+        <button class="tiptap-button" data-action="underline" title="Underline"><u>U</u></button>
+        <button class="tiptap-button" data-action="strike" title="Strike"><s>S</s></button>
+        <span class="tiptap-separator"></span>
+        <button class="tiptap-button" data-action="h1" title="Heading 1">H1</button>
+        <button class="tiptap-button" data-action="h2" title="Heading 2">H2</button>
+        <button class="tiptap-button" data-action="h3" title="Heading 3">H3</button>
+        <span class="tiptap-separator"></span>
+        <button class="tiptap-button" data-action="bulletList" title="Bullet List">•</button>
+        <button class="tiptap-button" data-action="orderedList" title="Numbered List">1.</button>
+        <span class="tiptap-separator"></span>
+        <button class="tiptap-button" data-action="link" title="Link">🔗</button>
+        <button class="tiptap-button" data-action="image" title="Image">📷</button>
+      `;
+      
+      // Initialize Tiptap editor directly
+      const editor = new window.tiptap.Editor({
+        element: editorElement,
+        extensions: [
+          window.tiptapStarterKit.default(),
+        ],
+        content: content,
+        onUpdate: ({ editor }) => {
+          this.handleEditorUpdate(tabId, editor.getHTML());
+        }
+      });
+      
+      // Add toolbar button event listeners
+      toolbarElement.querySelectorAll('.tiptap-button').forEach(button => {
+        button.addEventListener('click', () => {
+          const action = button.dataset.action;
+          
+          switch(action) {
+            case 'bold':
+              editor.chain().focus().toggleBold().run();
+              break;
+            case 'italic':
+              editor.chain().focus().toggleItalic().run();
+              break;
+            case 'underline':
+              editor.chain().focus().toggleUnderline().run();
+              break;
+            case 'strike':
+              editor.chain().focus().toggleStrike().run();
+              break;
+            case 'h1':
+              editor.chain().focus().toggleHeading({ level: 1 }).run();
+              break;
+            case 'h2':
+              editor.chain().focus().toggleHeading({ level: 2 }).run();
+              break;
+            case 'h3':
+              editor.chain().focus().toggleHeading({ level: 3 }).run();
+              break;
+            case 'bulletList':
+              editor.chain().focus().toggleBulletList().run();
+              break;
+            case 'orderedList':
+              editor.chain().focus().toggleOrderedList().run();
+              break;
+            case 'link':
+              const url = prompt('URL', 'https://');
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run();
+              }
+              break;
+            case 'image':
+              const imageUrl = prompt('Image URL', 'https://');
+              if (imageUrl) {
+                editor.chain().focus().setImage({ src: imageUrl }).run();
+              }
+              break;
+          }
+        });
+      });
+      
+      // Store reference to the editor
+      this.tiptapEditors[tabId] = {
+        editor: editor,
+        getContent: () => editor.getHTML(),
+        setContent: (content) => editor.commands.setContent(content),
+        destroy: () => editor.destroy()
+      };
+    } catch (error) {
+      console.error('Failed to initialize TipTap editor:', error);
+      
+      // Fallback to textarea if TipTap initialization fails
+      this.createFallbackTextarea(tabId, container, content);
+    }
+  }
+  
+  /**
+   * Creates a fallback textarea if TipTap fails to initialize
+   * @param {string} tabId - The ID of the tab
+   * @param {HTMLElement} container - The container element
+   * @param {string} content - The initial content for the textarea
+   */
+  createFallbackTextarea(tabId, container, content) {
+    // Clear container
+    container.innerHTML = '';
+    
+    const textarea = document.createElement('textarea');
+    textarea.className = 'notes-textarea';
+    textarea.placeholder = 'Write your notes here...';
+    textarea.value = content || '';
+    
+    // Add event listener for auto-save
+    textarea.addEventListener('input', (e) => {
+      this.handleEditorUpdate(tabId, e.target.value);
+    });
+    
+    container.appendChild(textarea);
+    
+    // Store reference to the textarea as a simple editor object
+    this.tiptapEditors[tabId] = {
+      getContent: () => textarea.value,
+      setContent: (content) => {
+        textarea.value = content;
+      },
+      destroy: () => {
+        textarea.remove();
+      }
+    };
   }
 
   /**
@@ -588,29 +862,19 @@ class NotesManager {
       }
     });
     
-    // Update active class on tab contents
-    const tabContents = this.notesContent.querySelectorAll('.tab-content');
-    tabContents.forEach(content => {
+    // Update active class on content
+    const contents = this.notesContent.querySelectorAll('.tab-content');
+    contents.forEach(content => {
       if (content.dataset.tabId === tabId) {
         content.classList.add('active');
         
-        // Check if editorIntegration is initialized
-        if (this.editorIntegration && this.editorIntegration.editors) {
-          // Create editor for this tab if it doesn't exist yet, with a small delay
-          setTimeout(async () => {
-            if (!this.editorIntegration.editors.has(tabId)) {
-              const tabData = this.notesData.find(tab => tab.id === tabId);
-              if (tabData) {
-                await this.editorIntegration.createEditorForTab(
-                  tabId, 
-                  content, 
-                  tabData.content,
-                  this.handleEditorUpdate
-                );
-              }
+        // Focus the textarea after a short delay
+        setTimeout(() => {
+          const textarea = content.querySelector('.notes-textarea');
+          if (textarea) {
+            textarea.focus();
             }
-          }, 10);
-        }
+        }, 50);
       } else {
         content.classList.remove('active');
       }
@@ -621,8 +885,7 @@ class NotesManager {
   }
 
   /**
-   * Switches to a tab by ID.
-   * 
+   * Switches to a specific tab.
    * @param {string} tabId - The ID of the tab to switch to
    */
   switchTab(tabId) {
@@ -652,28 +915,18 @@ class NotesManager {
     contentElement.className = 'tab-content';
     contentElement.dataset.tabId = newTab.id;
     
-    const textarea = document.createElement('textarea');
-    textarea.className = 'notes-textarea';
-    textarea.placeholder = 'Write your notes here...';
+    // Create editor container
+    const editorContainer = document.createElement('div');
+    editorContainer.className = 'tiptap-editor-container';
     
-    contentElement.appendChild(textarea);
+    contentElement.appendChild(editorContainer);
     this.notesContent.appendChild(contentElement);
+    
+    // Initialize TipTap editor
+    this.initTiptapEditor(newTab.id, editorContainer, '');
     
     // Activate the new tab
     this.switchTab(newTab.id);
-    
-    // Only create editor if editorIntegration is initialized
-    if (this.editorIntegration && this.editorIntegration.initialized) {
-      // Create the rich text editor for this tab with a small delay to ensure DOM is updated
-      setTimeout(async () => {
-        await this.editorIntegration.createEditorForTab(
-          newTab.id, 
-          contentElement, 
-          newTab.content, 
-          this.handleEditorUpdate
-        );
-      }, 10);
-    }
     
     // Save to storage
     this.saveNotesDataToStorage();
@@ -803,26 +1056,26 @@ class NotesManager {
   saveNotes() {
     if (!this.notesData || !this.notesContent) return;
     
-    // Check if editorIntegration is initialized and has editors
-    if (!this.editorIntegration || !this.editorIntegration.editors) return;
-    
-    // Get all tab IDs that have editors
-    const tabIds = Array.from(this.editorIntegration.editors.keys());
-    
-    // Loop through each tab with an editor
-    tabIds.forEach(tabId => {
-      // Get content from editor
-      const content = this.editorIntegration.getEditorContent(tabId);
-      
-      // Find the tab in the notes data
-      const tabIndex = this.notesData.findIndex(tab => tab.id === tabId);
-      
-      if (tabIndex !== -1) {
-        // Update the content
-        this.notesData[tabIndex].content = content;
-        this.notesData[tabIndex].timestamp = Date.now();
+    // Loop through each tab in notes data
+    for (const tabId in this.tiptapEditors) {
+      if (this.tiptapEditors.hasOwnProperty(tabId)) {
+        const editor = this.tiptapEditors[tabId];
+        
+        if (editor && editor.getContent) {
+          // Get content from editor
+          const content = editor.getContent();
+          
+          // Find the tab in the notes data
+          const tabIndex = this.notesData.findIndex(tab => tab.id === tabId);
+          
+          if (tabIndex !== -1) {
+            // Update the content
+            this.notesData[tabIndex].content = content;
+            this.notesData[tabIndex].timestamp = Date.now();
+          }
+        }
       }
-    });
+    }
     
     // Save to storage
     this.saveNotesDataToStorage();
@@ -855,75 +1108,10 @@ class NotesManager {
     }
     this.lastToggleTime = now;
 
-    if (!this.isNotesVisible) {
-      // Show notes
-      this.notesContainer.classList.add('active');
-      this.isNotesVisible = true;
-
-      // Always apply fullscreen mode
-      this.notesContainer.classList.add('fullscreen');
-      document.body.style.overflow = 'hidden'; // Prevent body scrolling
-
-      // Initialize the TipTap editor integration if not already initialized
-      if (!this.editorIntegration.initialized) {
-        this.editorIntegration.init().then(() => {
-          // Initialize editors with a delay
-          setTimeout(async () => {
-            const tabContents = this.notesContent.querySelectorAll('.tab-content');
-            for (const content of tabContents) {
-              const tabId = content.dataset.tabId;
-              if (tabId && content.classList.contains('active')) {
-                const tabData = this.notesData.find(tab => tab.id === tabId);
-                if (tabData) {
-                  await this.editorIntegration.createEditorForTab(
-                    tabId, 
-                    content, 
-                    tabData.content,
-                    this.handleEditorUpdate
-                  );
-                }
-              }
-            }
-          }, 10);
-        });
-      } else {
-        // If already initialized, just create editors for the active tab
-        setTimeout(async () => {
-          const tabContents = this.notesContent.querySelectorAll('.tab-content');
-          for (const content of tabContents) {
-            const tabId = content.dataset.tabId;
-            if (tabId && content.classList.contains('active')) {
-              const tabData = this.notesData.find(tab => tab.id === tabId);
-              if (tabData) {
-                await this.editorIntegration.createEditorForTab(
-                  tabId, 
-                  content, 
-                  tabData.content,
-                  this.handleEditorUpdate
-                );
-              }
-            }
-          }
-        }, 10);
-      }
-      
-    } else {
-      // Hide notes
-      this.saveNotes();
-      // Only destroy editors if they exist
-      if (this.editorIntegration && this.editorIntegration.editors) {
-        this.editorIntegration.destroyAllEditors();
-      }
-      this.notesContainer.classList.remove('active');
-      
-      // Restore body scrolling
-      document.body.style.overflow = ''; 
-      
-      // Delay removing fullscreen class until after closing animation
-      setTimeout(() => {
-        this.notesContainer.classList.remove('fullscreen');
-      }, 300);
-    }
+    // Open the notes in a new tab
+    chrome.tabs.create({
+      url: chrome.runtime.getURL('src/features/utilityButtons/notesManager/notesManager.html')
+    });
   }
 
   /**
@@ -935,11 +1123,6 @@ class NotesManager {
     
     // Save notes before closing
     this.saveNotes();
-    
-    // Destroy all editors if editor integration is initialized
-    if (this.editorIntegration && this.editorIntegration.editors) {
-      this.editorIntegration.destroyAllEditors();
-    }
     
     // Hide notes panel
     this.notesContainer.classList.remove('active');
@@ -956,23 +1139,21 @@ class NotesManager {
 }
 
 // Create and initialize the NotesManager when the DOM is loaded
+// Only do this if we're not in the standalone notes.html page
 document.addEventListener('DOMContentLoaded', () => {
-  // Check if this is a new tab - if it's a new blank tab, we'll see specific patterns in the URL
-  const isNewTab = window.location.href === 'about:blank' || 
-                  window.location.href === 'chrome://newtab/' ||
-                  window.location.href.includes('chrome://newtab') ||
-                  window.location.href.startsWith('chrome-search://');
+  // Check if we're in the main extension context and not in the standalone notes page
+  const isStandalonePage = window.location.href.includes('notesManager.html');
   
-  // Initialize NotesManager
-  const notesManager = new NotesManager();
-  
-  // Initialize manager
-  notesManager.init();
-  
-  // Make sure container has fullscreen class
-  if (notesManager.notesContainer) {
-    notesManager.notesContainer.classList.add('fullscreen');
+  if (!isStandalonePage) {
+    // Initialize NotesManager for the main extension context
+    const notesManager = new NotesManager();
+    notesManager.init();
   }
 });
 
-export default NotesManager; 
+// Make NotesManager available globally for standalone mode
+if (typeof window !== 'undefined') {
+  window.NotesManager = NotesManager;
+}
+
+export default NotesManager;

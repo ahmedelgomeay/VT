@@ -19,7 +19,6 @@ import CookiesManager from '../utilityButtons/cookiesManager/CookiesManager.js';
 import LocalStorageManager from '../utilityButtons/localStorageManager/LocalStorageManager.js';
 import CacheManager from '../utilityButtons/cacheManager/CacheManager.js';
 import PerformanceMode from '../utilityButtons/performanceMode/PerformanceMode.js';
-import NotesManager from '../utilityButtons/notesManager/NotesManager.js';
 import TobiAssistant from '../tobiAssistant/TobiAssistant.js';
 
 // Improve side panel detection to handle different width thresholds

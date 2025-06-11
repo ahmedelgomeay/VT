@@ -1,4 +1,5 @@
 import ToastManager from "../../utils/ToastManager.js";
+import TobiMessages from "./TobiMessages.js";
 
 /**
  * TobiAssistant class responsible for managing the TOBi icon interactions
@@ -21,15 +22,16 @@ class TobiAssistant {
         // Inspector properties
         this.inspectorActive = false;
         
+        // Logs-related properties
+        this.hasRequestedLogs = false;
+        this.pendingConversationId = false;
+        
         this.responses = [
             "Need help with Locating Elements?",
         ];
         
-        this.aiPrompts = [
-            "Hi I'm TOBi, How can I help you today?",
-            "Greetings I'm TOBi, What are you looking for today?",
-            "Hello I'm TOBi, Need specific information? Just ask!"
-        ];
+        // Use messages from TobiMessages
+        this.aiPrompts = TobiMessages.aiPrompts;
         
         this.isAnimating = false;
         this.aiMode = false;
@@ -115,8 +117,65 @@ class TobiAssistant {
     createAiChatInterface() {
         // Create chat container
         this.chatContainer = document.createElement('div');
+        this.chatContainer.id = 'tobiChatContainer';
         this.chatContainer.className = 'tobi-chat-container';
         this.chatContainer.style.display = 'none'; // Explicitly hide on creation
+        
+        // Add selector result styles
+        const selectorStyles = document.createElement('style');
+        selectorStyles.textContent = `
+            .selector-result {
+                background-color: #f5f5f7;
+                border-radius: 8px;
+                padding: 10px;
+                margin: 5px 0;
+                border-left: 3px solid #4e8cff;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            }
+            .selector-result h3 {
+                margin-top: 0;
+                color: #333;
+                font-size: 16px;
+                border-bottom: 1px solid #ddd;
+                padding-bottom: 5px;
+            }
+            .element-info {
+                font-size: 13px;
+                color: #666;
+                margin-bottom: 5px;
+            }
+            .element-text {
+                font-size: 14px;
+                color: #444;
+                background: #e9ecef;
+                padding: 5px;
+                border-radius: 4px;
+                margin-bottom: 8px;
+                white-space: pre-wrap;
+                word-break: break-word;
+            }
+            .selector-list {
+                margin-top: 5px;
+            }
+            .selector-item {
+                margin-bottom: 8px;
+                line-height: 1.4;
+            }
+            .selector-item code {
+                display: block;
+                background-color: #2d2d2d;
+                color: #f8f8f2;
+                padding: 6px;
+                border-radius: 4px;
+                font-family: monospace;
+                white-space: pre-wrap;
+                word-break: break-all;
+                margin-top: 3px;
+                max-height: 150px;
+                overflow-x: auto;
+            }
+        `;
+        document.head.appendChild(selectorStyles);
         
         // Add fullscreen class by default
         this.chatContainer.classList.add('fullscreen');
@@ -391,8 +450,17 @@ class TobiAssistant {
     addMessageToUI(sender, message) {
         if (!this.chatMessages) return;
         
-        // Render markdown and code blocks
-        const renderedMessage = this.renderMarkdown(message);
+        // Process the message content
+        let processedMessage;
+        
+        // Check if the message is already HTML (starts with <div, <p, etc.)
+        if (typeof message === 'string' && (message.trim().startsWith('<div') || message.trim().startsWith('<h') || message.trim().startsWith('<p'))) {
+            // It's already HTML, don't escape it
+            processedMessage = message;
+        } else {
+            // It's plain text or markdown, render it
+            processedMessage = this.renderMarkdown(message);
+        }
         
         const messageElement = document.createElement('div');
         messageElement.className = `tobi-chat-message ${sender}-message`;
@@ -402,11 +470,11 @@ class TobiAssistant {
                 <div class="tobi-chat-avatar">
                     <img src="../../assets/icons/tobi-VF.png" alt="TOBi">
                 </div>
-                <div class="tobi-chat-bubble">${renderedMessage}</div>
+                <div class="tobi-chat-bubble">${processedMessage}</div>
             `;
         } else {
             messageElement.innerHTML = `
-                <div class="tobi-chat-bubble">${renderedMessage}</div>
+                <div class="tobi-chat-bubble">${processedMessage}</div>
                 <div class="tobi-chat-avatar user">
                     <i class="fas fa-user"></i>
                 </div>
@@ -516,18 +584,49 @@ class TobiAssistant {
         
         // Check for questions about TOBi
         if (this.isAboutTobi(lowercaseQuery)) {
-            return "I'm TOBi, Vodafone's AI assistant! I'm here to help you with locator generation!";
+            return TobiMessages.general.aboutTobi;
         }
         
         // Check for help requests
         if (this.isHelpRequest(lowercaseQuery)) {
-            return "I can help you inspect elements on the page.";
+            return TobiMessages.general.helpRequest;
+        }
+        
+        // Check for logs requests
+        if (this.isLogsQuery(lowercaseQuery)) {
+            // If this is the first time asking for logs
+            if (!this.hasRequestedLogs) {
+                this.hasRequestedLogs = true;
+                return TobiMessages.logs.initialResponse;
+            } 
+            // If already asked for logs once, check for conversation ID
+            else if (this.pendingConversationId) {
+                // Check if query contains what looks like a conversation ID (alphanumeric string)
+                const potentialId = query.match(/[a-zA-Z0-9-_]{6,}/);
+                if (potentialId) {
+                    const conversationId = potentialId[0];
+                    this.pendingConversationId = false;
+                    return TobiMessages.logs.conversationLogs(conversationId);
+                } else {
+                    return TobiMessages.logs.invalidConversationId;
+                }
+            } 
+            // Ask for conversation ID
+            else {
+                this.pendingConversationId = true;
+                return TobiMessages.logs.askForConversationId;
+            }
+        }
+        
+        // Reset logs state if user asks about something else
+        if (this.pendingConversationId) {
+            this.pendingConversationId = false;
         }
         
         // Add other response types as needed
         
         // Fallback response
-        return "I'm not sure I understand. I am still under development.";
+        return TobiMessages.general.fallback;
     }
 
     /**
@@ -547,12 +646,7 @@ class TobiAssistant {
      * @returns {string} - A random greeting
      */
     getRandomGreeting() {
-        const greetings = [
-            "Hello! How can I help you today?",
-            "Hi there! I'm TOBi, ready to assist you.",
-            "Greetings! How can I assist you today?"
-        ];
-        
+        const greetings = TobiMessages.greetings;
         return greetings[Math.floor(Math.random() * greetings.length)];
     }
 
@@ -573,13 +667,7 @@ class TobiAssistant {
      * @returns {string} - A random response
      */
     getRandomYoureWelcome() {
-        const responses = [
-            "You're welcome! Happy to help.",
-            "Anytime! Let me know if you need anything else.",
-            "No problem at all! That's what I'm here for.",
-            "Glad I could assist! Need anything else?"
-        ];
-        
+        const responses = TobiMessages.thankYou;
         return responses[Math.floor(Math.random() * responses.length)];
     }
 
@@ -603,6 +691,17 @@ class TobiAssistant {
     isHelpRequest(query) {
         const helpPhrases = ['help', 'assist', 'how do i', 'how to', 'what can you do'];
         return helpPhrases.some(phrase => query.includes(phrase));
+    }
+
+    /**
+     * Checks if a query is a logs request.
+     * 
+     * @param {string} query - The query to check
+     * @returns {boolean} - Whether the query is a logs request
+     */
+    isLogsQuery(query) {
+        const logPhrases = ['logs'];
+        return logPhrases.some(phrase => query.toLowerCase().includes(phrase));
     }
 
     /**
@@ -734,7 +833,7 @@ class TobiAssistant {
         }
         
         // Add message about removed locator functionality
-        this.addBotMessage("Element inspection functionality has been simplified to only highlight elements without displaying locators.");
+        this.addBotMessage(TobiMessages.inspector.simplifiedNotice);
     }
 
     /**
@@ -767,13 +866,13 @@ class TobiAssistant {
                     }, (response) => {
                         if (chrome.runtime.lastError) {
                             console.error('Error activating inspector:', chrome.runtime.lastError);
-                            this.addBotMessage('❌ Could not activate inspector. Make sure you have a webpage open and refresh the page if needed.');
+                            this.addBotMessage(TobiMessages.inspector.activationError);
                             return;
                         }
 
                         if (response && response.success === false) {
                             console.error('Error from DomInspector:', response.error);
-                            this.addBotMessage('❌ Could not activate inspector. Please refresh the page and try again.');
+                            this.addBotMessage(TobiMessages.inspector.activationError);
                             return;
                         }
 
@@ -787,17 +886,17 @@ class TobiAssistant {
                         }
                         
                         // Show notification
-                        this.addBotMessage('🔍 Inspector mode activated! Switch to the webpage tab, hover over elements to highlight them. Right-click or press Escape to exit inspector mode.');
+                        this.addBotMessage(TobiMessages.inspector.activated);
                         
                         console.log('TOBi Inspector activated on active tab');
                     });
                 } else {
-                    this.addBotMessage('❌ No active tab found. Please open a webpage and try again.');
+                    this.addBotMessage(TobiMessages.inspector.noActiveTab);
                 }
             });
         }).catch((error) => {
             console.error('Error injecting DomInspector:', error);
-            this.addBotMessage('❌ Could not inject inspector into the page. Please refresh the page and try again.');
+            this.addBotMessage(TobiMessages.inspector.injectionError);
         });
     }
     
@@ -827,7 +926,7 @@ class TobiAssistant {
         }
         
         // Show notification
-        this.addBotMessage('✅ Inspector mode Deactivated.');
+        this.addBotMessage(TobiMessages.inspector.deactivated);
         
         console.log('TOBi Inspector Deactivated');
     }
@@ -873,6 +972,8 @@ class TobiAssistant {
     setupInspectorMessageListener() {
         // Listen for messages from DomInspector in content scripts
         chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+            console.log('TobiAssistant received message:', message);
+            
             if (message.action === "inspector-deactivated") {
                 this.inspectorActive = false;
                 const inspectButton = this.chatContainer?.querySelector('.tobi-chat-inspect');
@@ -880,34 +981,90 @@ class TobiAssistant {
                     inspectButton.classList.remove('active');
                     inspectButton.title = 'Highlight Page Elements';
                 }
-                this.addBotMessage('✅ Inspector mode deactivated.');
+                this.addBotMessage(TobiMessages.inspector.deactivated);
+                sendResponse({success: true});
+            } else if (message.action === "inspector-activated") {
+                this.inspectorActive = true;
+                const inspectButton = this.chatContainer?.querySelector('.tobi-chat-inspect');
+                if (inspectButton) {
+                    inspectButton.classList.add('active');
+                    inspectButton.title = 'Stop Highlighting';
+                }
+                sendResponse({success: true});
+            } else if (message.action === "element-selectors") {
+                // Handle the selectors from the inspected element
+                console.log('Received element-selectors message:', message.selectors);
+                this.displayElementSelectors(message.selectors);
                 sendResponse({success: true});
             } else if (message.action === "inspector-error") {
-                this.handleInspectorError(message.message);
+                // Handle inspector errors
+                console.error('Inspector error:', message.message);
+                this.addBotMessage(`❌ ${message.message || 'An error occurred while generating selectors'}`);
                 sendResponse({success: true});
             }
-            return true; // Keep message channel open for async response
+            return true;
         });
     }
     
-    /**
-     * Handles inspector error messages
-     */
-    handleInspectorError(errorMessage) {
-        console.error('Inspector error:', errorMessage);
+    displayElementSelectors(selectors) {
+        if (!selectors) {
+            this.addBotMessage(TobiMessages.inspector.elementFailure);
+            return;
+        }
+
+        console.log('Displaying selectors:', selectors);
         
-        // Deactivate inspector if it was active
-        if (this.inspectorActive) {
-            this.inspectorActive = false;
-            const inspectButton = this.chatContainer?.querySelector('.tobi-chat-inspect');
-            if (inspectButton) {
-                inspectButton.classList.remove('active');
-                inspectButton.title = 'Highlight Page Elements';
-            }
+        // Create a nicely formatted message with the selectors
+        let html = '<div class="selector-result">';
+        
+        // Add element info header
+        const info = selectors.elementInfo || {};
+        html += `<h3>Element: ${info.tagName || 'unknown'}</h3>`;
+        
+        // Show basic element info
+        html += '<div class="element-info">';
+        if (info.id) html += `id="${this.escapeHTML(info.id)}" `;
+        if (info.className) html += `class="${this.escapeHTML(info.className)}" `;
+        if (info.name) html += `name="${this.escapeHTML(info.name)}" `;
+        html += '</div>';
+        
+        // Show element text if available
+        if (info.text) {
+            html += `<div class="element-text">Text: "${this.escapeHTML(info.text)}"</div>`;
         }
         
-        // Display error message to user
-        this.addBotMessage(errorMessage);
+        // Show generated selectors
+        html += '<div class="selector-list">';
+        
+        // CSS selector
+        if (selectors.css) {
+            html += `<div class="selector-item">
+                <strong>CSS Selector:</strong>
+                <code>${this.escapeHTML(selectors.css)}</code>
+            </div>`;
+        }
+        
+        // XPath selector
+        if (selectors.xpath) {
+            html += `<div class="selector-item">
+                <strong>XPath:</strong>
+                <code>${this.escapeHTML(selectors.xpath)}</code>
+            </div>`;
+        }
+        
+        // Full XPath (absolute)
+        if (selectors.fullXPath) {
+            html += `<div class="selector-item">
+                <strong>Full XPath:</strong>
+                <code>${this.escapeHTML(typeof selectors.fullXPath === 'string' ? selectors.fullXPath : '//*')}</code>
+            </div>`;
+        }
+        
+        html += '</div>'; // Close selector-list
+        html += '</div>'; // Close selector-result
+        
+        // Add the message as raw HTML
+        this.addBotMessage(html);
     }
 }
 
@@ -920,4 +1077,4 @@ document.addEventListener('DOMContentLoaded', () => {
     tobiAssistant.init();
 });
 
-export default TobiAssistant; 
+export default TobiAssistant;

@@ -7,6 +7,8 @@ const platform = isChrome ? "chrome" : isFirefox ? "firefox" : isEdge ? "edge" :
 
 // Listen for messages from the popup or content scripts
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('Background script received message:', request.action);
+  
   if (request.action === "openPopup") {
     chrome.action.openPopup(); // Opens the default popup
   } else if (request.action === "activate-inspector" || request.action === "deactivate-inspector") {
@@ -26,9 +28,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       }
     });
     return true; // Keep message channel open for async response
-  } else if (request.action === "element-inspected" || request.action === "inspector-deactivated") {
-    // Route content script messages back to popup - these are handled by NewTobiAssistant directly
-    // No action needed here as these go directly to the extension
+  } else if (request.action === "element-selectors" || request.action === "inspector-deactivated" || request.action === "inspector-error") {
+    // Route content script messages back to TobiAssistant
+    console.log('Forwarding', request.action, 'message from content script to extension');
+    // No specific forwarding needed as the message will be handled by the TobiAssistant directly
+    return true; // Keep message channel open for async response
   }
 });
 
@@ -36,45 +40,49 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 try {
   // Check if sidePanel API is available
   if (chrome.sidePanel) {
-  // Configure side panel to open when action button is clicked
-  chrome.sidePanel.setPanelBehavior({
-    openPanelOnActionClick: true
-  }).catch(error => console.error("Side panel setup error:", error));
+    // Get the side panel path from the manifest
+    const sidePanelPath = chrome.runtime.getManifest().side_panel?.default_path || 
+                         "src/features/testDataManager/testDataManager.html";
+    
+    // Configure side panel to open when action button is clicked
+    chrome.sidePanel.setPanelBehavior({
+      openPanelOnActionClick: true
+    }).catch(error => console.error("Side panel setup error:", error));
 
-  // Handle tab updates to enable side panel on compatible pages
-  chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    if (tab.url && changeInfo.status === "complete") {
-      // Don't enable on chrome:// URLs
-      if (!tab.url.startsWith("chrome://")) {
+    // Handle tab updates to enable side panel on compatible pages
+    chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+      if (tab.url && changeInfo.status === "complete") {
+        // Don't enable on chrome:// URLs
+        if (!tab.url.startsWith("chrome://")) {
           try {
-        await chrome.sidePanel.setOptions({
+            await chrome.sidePanel.setOptions({
               tabId: tabId,
-          path: "src/features/testDataManager/testDataManager.html",
-          enabled: true
-        });
+              path: sidePanelPath,
+              enabled: true
+            });
             console.log("Side panel enabled for tab:", tabId);
           } catch (error) {
             console.error("Error enabling side panel:", error);
           }
+        }
       }
-    }
-  });
-
-  // Handle tab activation to enable side panel
-  chrome.tabs.onActivated.addListener(async (activeInfo) => {
-      try {
-    await chrome.sidePanel.setOptions({
-          tabId: activeInfo.tabId,
-      path: "src/features/testDataManager/testDataManager.html",
-      enabled: true
     });
+
+    // Handle tab activation to enable side panel
+    chrome.tabs.onActivated.addListener(async (activeInfo) => {
+      try {
+        await chrome.sidePanel.setOptions({
+          tabId: activeInfo.tabId,
+          path: sidePanelPath,
+          enabled: true
+        });
         console.log("Side panel enabled for activated tab:", activeInfo.tabId);
       } catch (error) {
         console.error("Error enabling side panel on tab activation:", error);
       }
     });
     
-    console.log("Side panel functionality initialized");
+    console.log("Side panel functionality initialized with path:", sidePanelPath);
   } else {
     console.log("Side panel API not available in this browser");
   }
