@@ -46,10 +46,26 @@ const tobiMessages = {
     
     // Logs-related messages
     logs: {
-        initialResponse: "Here are your logs: [Static Test Data for Logs that will be replaced later]",
-        askForConversationId: "To provide you with specific logs, I need a conversation ID. Please enter the conversation ID.",
-        invalidConversationId: "I couldn't identify a valid conversation ID in your message. Please provide just the conversation ID.",
-        conversationLogs: (id) => `Here are the logs for conversation ID: ${id}\n\n[Log data for conversation ${id} will be displayed here]`
+        initialResponse: `Here are your logs: 
+                         [Static Test Data for Logs that will be replaced later]
+                         Test
+                         Test
+                         Test
+                         Test4
+                         Test6
+                         TEst8
+                         Test9
+                         Test10
+                         Test11
+                         Test12
+                         Test15
+                         Test20
+                         Test21
+                         Test23
+                         Test32124
+                         TEst123421415215252212155215215152121521512515215215215215125125215112521
+                         Test123421521512521521512515215221512525152152152112521215125512521521512521512521
+                         Test 12452151252152152152121512521512521521521521512521525125215215215215121512521521`
     }
 };
 

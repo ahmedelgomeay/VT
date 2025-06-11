@@ -22,10 +22,6 @@ class TobiAssistant {
         // Inspector properties
         this.inspectorActive = false;
         
-        // Logs-related properties
-        this.hasRequestedLogs = false;
-        this.pendingConversationId = false;
-        
         this.responses = [
             "Need help with Locating Elements?",
         ];
@@ -385,6 +381,34 @@ class TobiAssistant {
     }
 
     /**
+     * Processes and formats a code string, applying responsive sizing based on content length
+     * 
+     * @param {string} codeContent - The code content to format
+     * @returns {string} - Formatted HTML code element with appropriate attributes
+     */
+    formatCodeContent(codeContent) {
+        // Replace line breaks with <br> within code blocks
+        const preservedCode = codeContent.replace(/\n/g, '<br>');
+        
+        // Analyze the content to determine formatting needs
+        const lines = preservedCode.split('<br>');
+        const longestLineLength = Math.max(...lines.map(line => line.length));
+        const totalLength = preservedCode.length;
+        const lineCount = lines.length;
+        
+        // Determine size category based on content metrics
+        let sizeCategory = 'normal';
+        if (longestLineLength > 60 || totalLength > 500) {
+            sizeCategory = 'long';
+        }
+        if (longestLineLength > 100 || totalLength > 1000) {
+            sizeCategory = 'very-long';
+        }
+        
+        return `<code data-length="${sizeCategory}" data-lines="${lineCount}">${preservedCode}</code>`;
+    }
+
+    /**
      * Renders markdown-style code blocks in text.
      * Handles various code blocks and basic markdown formatting.
      * 
@@ -399,11 +423,14 @@ class TobiAssistant {
         
         // Handle code blocks with language specification
         escapedText = escapedText.replace(/```(\w*)\n([\s\S]*?)\n```/g, (match, language, code) => {
-            return `<pre><code class="language-${language || 'plaintext'}">${code}</code></pre>`;
+            // Preserve line breaks in code blocks
+            return `<pre><code class="language-${language || 'plaintext'}" data-lines="${code.split('\n').length}">${code}</code></pre>`;
         });
         
-        // Handle inline code
-        escapedText = escapedText.replace(/`([^`]+)`/g, '<code>$1</code>');
+        // Handle inline code with preservation of line breaks
+        escapedText = escapedText.replace(/`([^`]+)`/g, (match, code) => {
+            return this.formatCodeContent(code);
+        });
         
         // Handle basic markdown
         // Bold
@@ -431,6 +458,10 @@ class TobiAssistant {
         
         // Simple paragraphs
         escapedText = escapedText.replace(/\n\n/g, '</p><p>');
+        
+        // Handle single line breaks
+        escapedText = escapedText.replace(/\n/g, '<br>');
+        
         escapedText = '<p>' + escapedText + '</p>';
         
         // Clean up empty paragraphs and fix paragraph nesting
@@ -594,33 +625,7 @@ class TobiAssistant {
         
         // Check for logs requests
         if (this.isLogsQuery(lowercaseQuery)) {
-            // If this is the first time asking for logs
-            if (!this.hasRequestedLogs) {
-                this.hasRequestedLogs = true;
-                return TobiMessages.logs.initialResponse;
-            } 
-            // If already asked for logs once, check for conversation ID
-            else if (this.pendingConversationId) {
-                // Check if query contains what looks like a conversation ID (alphanumeric string)
-                const potentialId = query.match(/[a-zA-Z0-9-_]{6,}/);
-                if (potentialId) {
-                    const conversationId = potentialId[0];
-                    this.pendingConversationId = false;
-                    return TobiMessages.logs.conversationLogs(conversationId);
-                } else {
-                    return TobiMessages.logs.invalidConversationId;
-                }
-            } 
-            // Ask for conversation ID
-            else {
-                this.pendingConversationId = true;
-                return TobiMessages.logs.askForConversationId;
-            }
-        }
-        
-        // Reset logs state if user asks about something else
-        if (this.pendingConversationId) {
-            this.pendingConversationId = false;
+            return TobiMessages.logs.initialResponse;
         }
         
         // Add other response types as needed
