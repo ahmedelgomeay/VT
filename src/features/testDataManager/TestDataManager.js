@@ -18,6 +18,78 @@ import DarkMode from '../utilityButtons/darkMode/DarkMode.js';
 import CookiesManager from '../utilityButtons/cookiesManager/CookiesManager.js';
 import LocalStorageManager from '../utilityButtons/localStorageManager/LocalStorageManager.js';
 import CacheManager from '../utilityButtons/cacheManager/CacheManager.js';
+import PerformanceMode from '../utilityButtons/performanceMode/PerformanceMode.js';
+import TobiAssistant from '../tobiAssistant/TobiAssistant.js';
+
+// Improve side panel detection to handle different width thresholds
+function detectViewMode() {
+  // Check for Chrome side panel URL pattern
+  const isSidePanelURL = window.location.href.includes('chrome-extension://') && 
+                         window.location.href.includes('side_panel');
+  
+  // Consider a viewport as a side panel if:
+  // 1. URL matches side panel pattern, or
+  // 2. Width is less than 500px
+  return isSidePanelURL || window.innerWidth <= 500;
+}
+
+// Update the side panel detection
+const isSidePanel = detectViewMode();
+
+// Simplified function for side panel adjustment with CSS-based centering
+function adjustForSidePanel() {
+  const isSidePanelNow = detectViewMode();
+  
+  if (isSidePanelNow) {
+    // Add the side panel mode class which contains our CSS
+    document.body.classList.add('side-panel-mode');
+    
+    // Force reapplication of centering styles
+    const container = document.querySelector('.container');
+    if (container) {
+      // Reset positioning to ensure clean application
+      container.style.position = 'relative';
+      container.style.left = '50%';
+      container.style.transform = 'translateX(-50%)';
+    
+      // Get utility buttons
+      const utilityButtons = document.querySelector('.utility-buttons');
+      
+      // Ensure utility buttons are in the container
+      if (utilityButtons) {
+      // First check if they've already been moved
+      const containerHasUtilityButtons = Array.from(container.children).some(child => 
+        child.classList && child.classList.contains('utility-buttons')
+      );
+      
+      if (!containerHasUtilityButtons) {
+        // Move utility buttons to the end of the container
+        container.appendChild(utilityButtons);
+        }
+      }
+    }
+  } else {
+    // Remove side panel mode class
+    document.body.classList.remove('side-panel-mode');
+    
+    // Get container and reset any inline styles
+    const container = document.querySelector('.container');
+    if (container) {
+      container.style.position = '';
+      container.style.left = '';
+      container.style.transform = '';
+    }
+    
+    // Move utility buttons back to the body if they're in the container
+    const utilityButtons = document.querySelector('.utility-buttons');
+    const containerElement = document.querySelector('.container');
+    
+    if (utilityButtons && containerElement && containerElement.contains(utilityButtons)) {
+      // Move utility buttons back to the body
+      document.body.appendChild(utilityButtons);
+    }
+  }
+}
 
 /**
  * Storage keys for managing persistent data in Chrome storage
@@ -74,6 +146,14 @@ class TestDataManager {
         this.loadSavedState();
         this.detectCurrentEnvironment();
         this.setupEventListeners();
+        
+        // Add side panel adjustments
+        adjustForSidePanel();
+        
+        // Update the resize event listener to use the improved adjustForSidePanel function
+        window.addEventListener('resize', () => {
+            adjustForSidePanel();
+        });
     }
     
     /**
@@ -990,6 +1070,14 @@ localStorageManager.init();
 
 const cacheManager = new CacheManager();
 cacheManager.init();
+
+// Initialize performance mode
+const performanceMode = new PerformanceMode();
+performanceMode.init();
+
+// Initialize the TOBi Assistant
+const tobiAssistant = new TobiAssistant();
+tobiAssistant.init();
 
 export default TestDataManager;
 

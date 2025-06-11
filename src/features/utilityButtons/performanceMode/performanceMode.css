@@ -1,0 +1,341 @@
+/**
+ * Performance Mode CSS
+ * 
+ * Styles for the performance mode button and low-performance mode.
+ */
+
+/*======================
+  Performance Mode Button
+=======================*/
+#performanceModeBtn.active {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff6b6b;
+}
+
+#performanceModeBtn.active .tooltip {
+  background-color: rgba(139, 0, 0, 0.9);
+}
+
+#performanceModeBtn.active .tooltip::after {
+  border-color: transparent transparent transparent rgba(139, 0, 0, 0.9);
+}
+
+/*======================
+  Low Performance Mode Styles
+=======================*/
+/* Main body styles - Remove background animations and use simple color */
+body.low-performance-mode {
+  background: #8b0000 !important; /* Dark red background */
+  background-color: #8b0000 !important; /* Added for better browser compatibility */
+}
+
+/* Dark mode + Performance mode body background */
+body.dark-mode.low-performance-mode {
+  background: #121212 !important; /* Cool dark background - Material Dark theme inspired */
+  background-color: #121212 !important; /* Added for better browser compatibility */
+}
+
+body.low-performance-mode::before {
+  display: none !important;
+  animation: none !important;
+  opacity: 0 !important; /* Ensure the background image is completely hidden */
+  visibility: hidden !important; /* Additional property to hide the background */
+}
+
+body.low-performance-mode::after {
+  background: #8b0000 !important; /* Dark red background */
+  background-color: #8b0000 !important; /* Added for better browser compatibility */
+  opacity: 1 !important; /* Ensure this layer is fully visible */
+  z-index: -1 !important; /* Make sure this is behind content but in front of ::before */
+}
+
+/* Dark mode background for the ::after pseudo-element */
+body.dark-mode.low-performance-mode::after {
+  background: #121212 !important; /* Cool dark background - Material Dark theme inspired */
+  background-color: #121212 !important; /* Added for better browser compatibility */
+}
+
+/* Disable all animations and visual effects except for environment selectors */
+body.low-performance-mode *:not(.env-select):not(.env-select *),
+body.low-performance-mode *:not(.env-select):not(.env-select *)::before,
+body.low-performance-mode *:not(.env-select):not(.env-select *)::after {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Keep essential transform properties for layout */
+body.side-panel-mode.low-performance-mode .container {
+  transform: translateX(-50%) !important;
+  position: relative !important;
+  left: 50% !important;
+}
+
+/* Simplify environment select styling */
+body.low-performance-mode .env-select.dev-selected,
+body.low-performance-mode .env-select.testing-selected,
+body.low-performance-mode .env-select.staging-selected,
+body.low-performance-mode .env-select.production-selected {
+  background: #1C3A54 !important;
+}
+
+/* Preserve environment colors in performance mode */
+body.low-performance-mode .env-select.dev-selected {
+  background: #36D179 !important; /* Dev - Green */
+  background: linear-gradient(135deg, #41C488, #36D179, #41C488) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+body.low-performance-mode .env-select.testing-selected {
+  background: #EFC050 !important; /* Testing - Yellow/Gold */
+  background: linear-gradient(135deg, #EFC050, #FFD700, #EFC050) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+body.low-performance-mode .env-select.staging-selected {
+  background: #BB2649 !important; /* Staging - Red */
+  background: linear-gradient(135deg, #BB2649, #FF3366, #BB2649) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+body.low-performance-mode .env-select.production-selected {
+  background: #5e2f9e !important; /* Production - Purple */
+  background: linear-gradient(135deg, #5e2f9e, #7843c4, #5e2f9e) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+/* Dark mode + Performance mode environment select colors */
+body.dark-mode.low-performance-mode .env-select.dev-selected {
+  background: #2d8b60 !important; /* Dark mode Dev - Darker Green */
+  background: linear-gradient(135deg, #2d8b60, #36D179, #2d8b60) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+body.dark-mode.low-performance-mode .env-select.testing-selected {
+  background: #b38939 !important; /* Dark mode Testing - Darker Gold */
+  background: linear-gradient(135deg, #b38939, #EFC050, #b38939) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+body.dark-mode.low-performance-mode .env-select.staging-selected {
+  background: #8e1d37 !important; /* Dark mode Staging - Darker Red */
+  background: linear-gradient(135deg, #8e1d37, #BB2649, #8e1d37) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+body.dark-mode.low-performance-mode .env-select.production-selected {
+  background: #4b2681 !important; /* Dark mode Production - Darker Purple */
+  background: linear-gradient(135deg, #4b2681, #7843c4, #4b2681) !important;
+  background-size: 200% 100% !important;
+  animation: gradientShift 3s ease infinite !important;
+}
+
+/* Remove blur effects which are GPU intensive */
+body.low-performance-mode .container,
+body.low-performance-mode .result-item {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* Simplify result items */
+body.low-performance-mode .result-item {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid #ccc !important;
+}
+
+/* Dark mode + Performance mode result items */
+body.dark-mode.low-performance-mode .result-item {
+  background: rgba(30, 35, 42, 0.9) !important;
+  border: 1px solid rgba(100, 100, 100, 0.25) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Dark mode + Performance mode result item name header */
+body.dark-mode.low-performance-mode .result-item-name {
+  background: rgba(45, 45, 45, 0.9) !important;
+  color: #e0e0e0 !important;
+  border-bottom: 2px solid #F79009 !important;
+}
+
+body.low-performance-mode .result-item:hover {
+  transform: none !important;
+}
+
+/* Disable TOBi animations */
+body.low-performance-mode .tobi-icon.active,
+body.low-performance-mode .typing-indicator .dot {
+  animation: none !important;
+}
+
+/* Tooltip position fixes */
+body.low-performance-mode .utility-button .tooltip {
+  position: absolute !important;
+  transform: translateY(-50%) !important;
+  right: 100% !important;
+  top: 50% !important;
+  margin-right: 15px !important;
+}
+
+body.low-performance-mode .utility-button .tooltip::after {
+  position: absolute !important;
+  top: 50% !important;
+  left: 100% !important;
+  transform: translateY(-50%) !important;
+  border-color: transparent transparent transparent rgba(0, 0, 0, 0.8) !important;
+}
+
+body.low-performance-mode [data-tooltip]::before {
+  position: absolute !important;
+  right: 100% !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-right: 10px !important;
+}
+
+body.low-performance-mode [data-tooltip]::after {
+  position: absolute !important;
+  top: 50% !important;
+  right: 100% !important;
+  transform: translateY(-50%) !important;
+  margin-right: -2px !important;
+}
+
+/* Small screen tooltip positioning */
+@media screen and (min-width: 442px) and (max-width: 600px) {
+  body.low-performance-mode .utility-button .tooltip {
+    top: 50% !important;
+    left: auto !important;
+    right: 100% !important;
+    transform: translateY(-50%) !important;
+    margin-right: 15px !important;
+    margin-top: 0 !important;
+  }
+  
+  body.low-performance-mode .utility-button .tooltip::after {
+    top: 50% !important;
+    left: 100% !important;
+    right: auto !important;
+    transform: translateY(-50%) !important;
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8) !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::before,
+  body.low-performance-mode [data-tooltip]:not([data-position])::before {
+    right: 100% !important;
+    top: 50% !important;
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    margin-right: 10px !important;
+    margin-top: 0 !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::after,
+  body.low-performance-mode [data-tooltip]:not([data-position])::after {
+    top: 50% !important;
+    right: 100% !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8) !important;
+    margin-right: -2px !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Very small screen tooltip positioning - below buttons */
+@media screen and (max-width: 441px) {
+  body.low-performance-mode .utility-button .tooltip {
+    top: 100% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    margin-right: 0 !important;
+    margin-top: 15px !important;
+  }
+  
+  body.low-performance-mode .utility-button .tooltip::after {
+    top: 0 !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) translateY(-100%) !important;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::before,
+  body.low-performance-mode [data-tooltip]:not([data-position])::before {
+    right: auto !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-right: 0 !important;
+    margin-top: 10px !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::after,
+  body.low-performance-mode [data-tooltip]:not([data-position])::after {
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: 50% !important;
+    top: 100% !important;
+    transform: translateX(-50%) !important;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent !important;
+    margin-right: 0 !important;
+    margin-top: 4px !important;
+  }
+}
+
+/* Full reset of background properties to override all other styles */
+html body.low-performance-mode {
+  background: #8b0000 !important;
+  background-color: #8b0000 !important;
+  background-image: none !important;
+}
+
+/* Override the ::after pseudo-element which contains the blue background */
+html body.low-performance-mode::after {
+  content: '' !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: #8b0000 !important;
+  background-color: #8b0000 !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  z-index: -2 !important;
+}
+
+/* Override the ::before pseudo-element which contains the background image */
+html body.low-performance-mode::before {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  background: none !important;
+  background-image: none !important;
+  animation: none !important;
+}
+
+/* Make sure we have the gradient animation for performance mode */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Additional style for html body in dark performance mode to ensure consistency */
+html body.dark-mode.low-performance-mode {
+  background: #121212 !important; /* Cool dark background - Material Dark theme inspired */
+  background-color: #121212 !important; /* Added for better browser compatibility */
+  background-image: none !important;
+} 

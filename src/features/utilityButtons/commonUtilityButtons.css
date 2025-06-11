@@ -217,3 +217,258 @@ body.dark-mode [data-tooltip][data-position="top"]::after {
 body.dark-mode [data-tooltip][data-position="right"]::after {
   border-color: transparent rgba(20, 20, 20, 0.9) transparent transparent;
 }
+
+/* Active state for utility buttons */
+.utility-button.active {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+  transform: scale(1.05);
+}
+
+#performanceModeBtn.active {
+  background: rgba(255, 0, 0, 0.2);
+  color: #ff6b6b;
+}
+
+#tobiAnimToggleBtn.active {
+  background: rgba(0, 120, 255, 0.2);
+  color: #5bc0de;
+}
+
+/* Performance mode tooltip fixes */
+body.low-performance-mode .utility-button .tooltip {
+  position: absolute;
+  transform: translateY(-50%) !important;
+  right: 100% !important;
+  top: 50% !important;
+  margin-right: 15px !important;
+}
+
+body.low-performance-mode .utility-button .tooltip::after {
+  position: absolute;
+  top: 50% !important;
+  left: 100% !important;
+  transform: translateY(-50%) !important;
+}
+
+body.low-performance-mode [data-tooltip]::before {
+  position: absolute;
+  right: 100% !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-right: 10px !important;
+}
+
+body.low-performance-mode [data-tooltip]::after {
+  position: absolute;
+  top: 50% !important;
+  right: 100% !important;
+  transform: translateY(-50%) !important;
+  margin-right: -2px !important;
+}
+
+body.low-performance-mode [data-tooltip][data-position="left"]::before,
+body.low-performance-mode [data-tooltip]:not([data-position])::before {
+  right: 100% !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin-right: 10px !important;
+}
+
+body.low-performance-mode [data-tooltip][data-position="left"]::after,
+body.low-performance-mode [data-tooltip]:not([data-position])::after {
+  top: 50% !important;
+  right: 100% !important;
+  transform: translateY(-50%) !important;
+  margin-right: -2px !important;
+}
+
+/* Media query for small screens - keeps tooltips on the left side */
+@media screen and (min-width: 442px) and (max-width: 600px) {
+  /* Keep tooltips on the left side, same as large screens */
+  .utility-button .tooltip {
+    right: 100%;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 15px;
+    margin-top: 0;
+  }
+  
+  .utility-button .tooltip::after {
+    top: 50%;
+    left: 100%;
+    right: auto;
+    transform: translateY(-50%);
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Keep position for data-tooltip elements consistent with large screens */
+  [data-tooltip][data-position="left"]::before,
+  [data-tooltip]:not([data-position])::before {
+    right: 100%;
+    left: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 10px;
+    margin-top: 0;
+  }
+  
+  [data-tooltip][data-position="left"]::after,
+  [data-tooltip]:not([data-position])::after {
+    top: 50%;
+    right: 100%;
+    left: auto;
+    bottom: auto;
+    transform: translateY(-50%);
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8);
+    margin-right: -2px;
+    margin-top: 0;
+  }
+  
+  /* Dark mode adjustments for small screens */
+  body.dark-mode .utility-button .tooltip::after {
+    border-color: transparent transparent transparent rgba(20, 20, 20, 0.9);
+  }
+  
+  body.dark-mode [data-tooltip][data-position="left"]::after,
+  body.dark-mode [data-tooltip]:not([data-position])::after {
+    border-color: transparent transparent transparent rgba(20, 20, 20, 0.9);
+  }
+  
+  /* Performance mode tooltip fixes for small screens */
+  body.low-performance-mode .utility-button .tooltip {
+    top: 50% !important;
+    left: auto !important;
+    right: 100% !important;
+    transform: translateY(-50%) !important;
+    margin-right: 15px !important;
+    margin-top: 0 !important;
+  }
+  
+  body.low-performance-mode .utility-button .tooltip::after {
+    top: 50% !important;
+    left: 100% !important;
+    right: auto !important;
+    transform: translateY(-50%) !important;
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8) !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::before,
+  body.low-performance-mode [data-tooltip]:not([data-position])::before {
+    right: 100% !important;
+    top: 50% !important;
+    left: auto !important;
+    transform: translateY(-50%) !important;
+    margin-right: 10px !important;
+    margin-top: 0 !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::after,
+  body.low-performance-mode [data-tooltip]:not([data-position])::after {
+    top: 50% !important;
+    right: 100% !important;
+    left: auto !important;
+    bottom: auto !important;
+    transform: translateY(-50%) !important;
+    border-color: transparent transparent transparent rgba(0, 0, 0, 0.8) !important;
+    margin-right: -2px !important;
+    margin-top: 0 !important;
+  }
+}
+
+/* Media query for very small screens - shows tooltips below the buttons */
+@media screen and (max-width: 441px) {
+  /* Show tooltips below utility buttons */
+  .utility-button .tooltip {
+    right: auto;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-right: 0;
+    margin-top: 15px;
+  }
+  
+  .utility-button .tooltip::after {
+    top: 0;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%) translateY(-100%);
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+  }
+  
+  /* Show tooltips below for data-tooltip elements */
+  [data-tooltip][data-position="left"]::before,
+  [data-tooltip]:not([data-position])::before {
+    right: auto;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-right: 0;
+    margin-top: 10px;
+  }
+  
+  [data-tooltip][data-position="left"]::after,
+  [data-tooltip]:not([data-position])::after {
+    top: auto;
+    right: auto;
+    bottom: auto;
+    left: 50%;
+    top: 100%;
+    transform: translateX(-50%);
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent;
+    margin-right: 0;
+    margin-top: 4px;
+  }
+  
+  /* Dark mode adjustments for very small screens */
+  body.dark-mode .utility-button .tooltip::after {
+    border-color: transparent transparent rgba(20, 20, 20, 0.9) transparent;
+  }
+  
+  body.dark-mode [data-tooltip][data-position="left"]::after,
+  body.dark-mode [data-tooltip]:not([data-position])::after {
+    border-color: transparent transparent rgba(20, 20, 20, 0.9) transparent;
+  }
+  
+  /* Performance mode tooltip fixes for very small screens */
+  body.low-performance-mode .utility-button .tooltip {
+    top: 100% !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    margin-right: 0 !important;
+    margin-top: 15px !important;
+  }
+  
+  body.low-performance-mode .utility-button .tooltip::after {
+    top: 0 !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) translateY(-100%) !important;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::before,
+  body.low-performance-mode [data-tooltip]:not([data-position])::before {
+    right: auto !important;
+    top: 100% !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin-right: 0 !important;
+    margin-top: 10px !important;
+  }
+  
+  body.low-performance-mode [data-tooltip][data-position="left"]::after,
+  body.low-performance-mode [data-tooltip]:not([data-position])::after {
+    top: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: 50% !important;
+    top: 100% !important;
+    transform: translateX(-50%) !important;
+    border-color: transparent transparent rgba(0, 0, 0, 0.8) transparent !important;
+    margin-right: 0 !important;
+    margin-top: 4px !important;
+  }
+}

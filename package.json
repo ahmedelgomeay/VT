@@ -1,0 +1,18 @@
+{
+  "name": "vois-test-data-extension",
+  "version": "1.2.0",
+  "description": "A Chrome extension to manage test data for VOIS",
+  "main": "background.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chrome-extension",
+    "test-data",
+    "vois"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+  }
+}
