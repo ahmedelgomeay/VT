@@ -9,8 +9,7 @@
     "scripting",
     "activeTab",
     "browsingData",
-    "tabs",
-    "sidePanel"
+    "tabs"
   ],
   "background": {
     "service_worker": "background.js"
@@ -23,25 +22,5 @@
     "16": "src/assets/icons/icon-16.png",
     "48": "src/assets/icons/icon-48.png",
     "128": "src/assets/icons/icon-128.png"
-  },
-  "side_panel": {
-    "default_path": "src/features/testDataManager/testDataManager.html"
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "src/utils/tiptap/*.css", 
-        "src/utils/tiptap/*.js", 
-        "dist/*.js",
-        "src/components/navBar/*.css",
-        "src/components/footer/*.css",
-        "tiptap/app/**",
-        "tiptap/components/**",
-        "tiptap/lib/**",
-        "tiptap/hooks/**",
-        "src/utils/selectorhub/content-script/injectedScript.js"
-      ],
-      "matches": ["<all_urls>"]
-    }
-  ]
+  }
 }

@@ -15,7 +15,7 @@ const tobiMessages = {
     general: {
         fallback: "I'm not sure I understand. I am still under development.",
         aboutTobi: "I'm TOBi, Vodafone's AI assistant! I'm here to help you with locator generation!",
-        helpRequest: "I can help you inspect elements on the page."
+        helpRequest: "I can help you inspect elements on the page. You can also view logs by typing 'logs' or get specific logs with 'convid your_conversation_id'."
     },
     
     // Greetings
@@ -46,27 +46,24 @@ const tobiMessages = {
     
     // Logs-related messages
     logs: {
-        initialResponse: `Here are your logs: 
-                         [Static Test Data for Logs that will be replaced later]
-                         Test
-                         Test
-                         Test
-                         Test4
-                         Test6
-                         TEst8
-                         Test9
-                         Test10
-                         Test11
-                         Test12
-                         Test15
-                         Test20
-                         Test21
-                         Test23
-                         Test32124
-                         TEst123421415215252212155215215152121521512515215215215215125125215112521
-                         Test123421521512521521512515215221512525152152152112521215125512521521512521512521
-                         Test 12452151252152152152121512521512521521521521512521525125215215215215121512521521`
-    }
+        Logs_Query: `Test`,
+         
+    API_Query: `fetch logs 
+    | filter matchesValue(index, "test") 
+    | filter contains(content,"$conversation_id")
+    | parse content, "JSON:content"
+    | fieldsAdd timestamp = toString(content[timestamp]), payload = toString(content[payload])
+    | parse payload, "JSON:payload"
+    | fields timestamp, conversation-id = toString(content[conversation-id]), text = payload[messages][message][][content][textMessage][textPlain], variables = toString(payload[context][skills][actions skill][skill_variables]), api = toString(payload[methodName]), api_response = toString(payload[response]), payload = toString(content[payload]), transaction-id = toString(content[transaction-id]), content
+    | sort timestamp 
+    | filter isNotNull(conversation-id)
+    | fieldsAdd text = if(isNull(text), "", else:text)
+    | fieldsAdd variables = if(isNull(variables), "", else:variables)
+    | fieldsAdd api = if(isNull(api), "", else:api)
+    | fieldsAdd api_response = if(isNull(api_response), "", else:api_response)
+          `
+      }
+      
 };
 
 export default tobiMessages; 

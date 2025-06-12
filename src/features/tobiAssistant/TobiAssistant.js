@@ -170,6 +170,59 @@ class TobiAssistant {
                 max-height: 150px;
                 overflow-x: auto;
             }
+            
+            /* Copyable content styles */
+            .copyable-content {
+                background-color: #f5f7fa;
+                border-radius: 8px;
+                margin: 10px 0;
+                border: 1px solid #e0e0e0;
+                overflow: hidden;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            }
+            .copyable-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 12px;
+                background-color: #e9ecef;
+                border-bottom: 1px solid #e0e0e0;
+            }
+            .copyable-header span {
+                font-weight: bold;
+                color: #333;
+            }
+            .copy-button {
+                background-color: #4a86e8;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 5px 8px;
+                font-size: 12px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                min-width: 65px;
+                width: auto;
+            }
+            .copy-button:hover {
+                background-color: #3a76d8;
+            }
+            .copy-button.copied {
+                background-color: #4caf50;
+            }
+            .copyable-pre {
+                margin: 0;
+                padding: 12px;
+                background-color: #f8f9fa;
+                overflow-x: auto;
+                white-space: pre-wrap;
+                word-break: break-word;
+                font-family: monospace;
+                font-size: 13px;
+                color: #333;
+                max-height: 300px;
+                overflow-y: auto;
+            }
         `;
         document.head.appendChild(selectorStyles);
         
@@ -192,6 +245,41 @@ class TobiAssistant {
         // Create chat messages area
         this.chatMessages = document.createElement('div');
         this.chatMessages.className = 'tobi-chat-messages';
+        
+        // Add event listener for copy buttons
+        this.chatMessages.addEventListener('click', (event) => {
+            const target = event.target;
+            if (target.classList.contains('copy-button') || target.closest('.copy-button')) {
+                const button = target.classList.contains('copy-button') ? target : target.closest('.copy-button');
+                const content = button.getAttribute('data-content');
+                
+                if (content) {
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(content).then(() => {
+                        // Show copied feedback
+                        const originalText = button.innerHTML;
+                        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        button.classList.add('copied');
+                        
+                        // Reset after 2 seconds
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                            button.classList.remove('copied');
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
+                        // Show error feedback
+                        const originalText = button.innerHTML;
+                        button.innerHTML = '<i class="fas fa-times"></i> Failed';
+                        
+                        // Reset after 2 seconds
+                        setTimeout(() => {
+                            button.innerHTML = originalText;
+                        }, 2000);
+                    });
+                }
+            }
+        });
         
         // Create chat input area
         const chatInputArea = document.createElement('form');
@@ -595,46 +683,6 @@ class TobiAssistant {
     }
 
     /**
-     * Generates an AI-like response based on the user's query.
-     * 
-     * @param {string} query - The user's query
-     * @returns {string} - The AI response
-     */
-    generateAiResponse(query) {
-        const lowercaseQuery = query.toLowerCase();
-        
-        // Check for greetings
-        if (this.isGreeting(lowercaseQuery)) {
-            return this.getRandomGreeting();
-        }
-        
-        // Check for thank you
-        if (this.isThankYou(lowercaseQuery)) {
-            return this.getRandomYoureWelcome();
-        }
-        
-        // Check for questions about TOBi
-        if (this.isAboutTobi(lowercaseQuery)) {
-            return TobiMessages.general.aboutTobi;
-        }
-        
-        // Check for help requests
-        if (this.isHelpRequest(lowercaseQuery)) {
-            return TobiMessages.general.helpRequest;
-        }
-        
-        // Check for logs requests
-        if (this.isLogsQuery(lowercaseQuery)) {
-            return TobiMessages.logs.initialResponse;
-        }
-        
-        // Add other response types as needed
-        
-        // Fallback response
-        return TobiMessages.general.fallback;
-    }
-
-    /**
      * Checks if a query is a greeting.
      * 
      * @param {string} query - The query to check
@@ -707,6 +755,85 @@ class TobiAssistant {
     isLogsQuery(query) {
         const logPhrases = ['logs'];
         return logPhrases.some(phrase => query.toLowerCase().includes(phrase));
+    }
+
+    /**
+     * Checks if a query is requesting logs for a specific conversation ID.
+     * 
+     * @param {string} query - The query to check
+     * @returns {object|null} - The conversation ID if found, or null
+     */
+    isConversationIdQuery(query) {
+        const regex = /convid\s+([a-zA-Z0-9_-]+)/i;
+        const match = query.match(regex);
+        return match ? { conversationId: match[1] } : null;
+    }
+
+    /**
+     * Creates a response with a copy button for code-like content.
+     * 
+     * @param {string} content - The content to be copied
+     * @param {string} title - Optional title for the copyable block
+     * @returns {string} - HTML string with the content and copy button
+     */
+    createCopyableResponse(content, title = 'Query') {
+        return `<div class="copyable-content">
+            <div class="copyable-header">
+                <span>${title}</span>
+                <button class="copy-button" data-content="${this.escapeHTML(content)}">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+            <pre class="copyable-pre">${this.escapeHTML(content)}</pre>
+        </div>`;
+    }
+
+    /**
+     * Generates an AI-like response based on the user's query.
+     * 
+     * @param {string} query - The user's query
+     * @returns {string} - The AI response
+     */
+    generateAiResponse(query) {
+        const lowercaseQuery = query.toLowerCase();
+        
+        // Check for greetings
+        if (this.isGreeting(lowercaseQuery)) {
+            return this.getRandomGreeting();
+        }
+        
+        // Check for thank you
+        if (this.isThankYou(lowercaseQuery)) {
+            return this.getRandomYoureWelcome();
+        }
+        
+        // Check for questions about TOBi
+        if (this.isAboutTobi(lowercaseQuery)) {
+            return TobiMessages.general.aboutTobi;
+        }
+        
+        // Check for help requests
+        if (this.isHelpRequest(lowercaseQuery)) {
+            return TobiMessages.general.helpRequest;
+        }
+        
+        // Check for conversation ID queries
+        const conversationIdQuery = this.isConversationIdQuery(query);
+        if (conversationIdQuery) {
+            // Replace $conversation_id with the actual ID
+            const queryContent = TobiMessages.logs.API_Query.replace('$conversation_id', conversationIdQuery.conversationId);
+            return this.createCopyableResponse(queryContent, 'API Query');
+        }
+        
+        // Check for logs requests
+        if (this.isLogsQuery(lowercaseQuery)) {
+            return this.createCopyableResponse(TobiMessages.logs.Logs_Query, 'Logs Query');
+        }
+        
+        // Add other response types as needed
+        
+        // Fallback response
+        return TobiMessages.general.fallback;
     }
 
     /**
@@ -1082,4 +1209,4 @@ document.addEventListener('DOMContentLoaded', () => {
     tobiAssistant.init();
 });
 
-export default TobiAssistant;
+export default TobiAssistant; 
