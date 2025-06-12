@@ -74,13 +74,8 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
         }, 100);
       });
     } catch (e) {
-      // Not valid JSON, show notification
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'src/assets/icons/icon-128.png',
-        title: 'Invalid JSON',
-        message: 'The selected text is not valid JSON'
-      });
+      console.error('Invalid JSON:', e);
+      // Removed notification for invalid JSON
     }
   }
 });
@@ -105,9 +100,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Add badge to show extension is active
-chrome.action.setBadgeBackgroundColor({ color: '#0651A5' });
-chrome.action.setBadgeText({ text: 'JSON' });
+// Removed badge that shows extension is active
 
 // Setup side panel for all supported browsers
 try {

@@ -223,6 +223,32 @@ class TobiAssistant {
                 max-height: 300px;
                 overflow-y: auto;
             }
+            
+            /* Dark mode styles for copyable content */
+            body.dark-mode .copyable-content {
+                background-color: #2c3e50;
+                border-color: #3c4e60;
+            }
+            body.dark-mode .copyable-header {
+                background-color: #1e2a3a;
+                border-color: #3c4e60;
+            }
+            body.dark-mode .copyable-header span {
+                color: #e0e0e0;
+            }
+            body.dark-mode .copyable-pre {
+                background-color: #34495e;
+                color: #e0e0e0;
+            }
+            body.dark-mode .copy-button {
+                background-color: #2980b9;
+            }
+            body.dark-mode .copy-button:hover {
+                background-color: #3498db;
+            }
+            body.dark-mode .copy-button.copied {
+                background-color: #27ae60;
+            }
         `;
         document.head.appendChild(selectorStyles);
         
