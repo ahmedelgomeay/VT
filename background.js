@@ -36,6 +36,79 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 });
 
+// JSON Beautifier Extension functionality
+
+// Create a context menu item for beautifying JSON in new tab
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.create({
+    id: 'beautify-json',
+    title: 'Beautify JSON in New Tab',
+    contexts: ['selection']
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'beautify-json' && info.selectionText) {
+    try {
+      // Try to parse as JSON to validate
+      JSON.parse(info.selectionText);
+      
+      // Open a new tab with about:blank
+      chrome.tabs.create({ url: 'about:blank' }, (newTab) => {
+        // Execute a script to set the selected text to body
+        setTimeout(() => {
+          chrome.scripting.executeScript({
+            target: { tabId: newTab.id },
+            func: (jsonText) => {
+              document.body.innerText = jsonText;
+            },
+            args: [info.selectionText]
+          }).then(() => {
+            // Now inject our beautifier
+            chrome.scripting.executeScript({
+              target: { tabId: newTab.id },
+              files: ['src/features/jsonBeautifier/JsonBeautifier.js']
+            });
+          });
+        }, 100);
+      });
+    } catch (e) {
+      // Not valid JSON, show notification
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'src/assets/icons/icon-128.png',
+        title: 'Invalid JSON',
+        message: 'The selected text is not valid JSON'
+      });
+    }
+  }
+});
+
+// Monitor tab updates to detect about:blank pages
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // Check if URL contains about:blank
+  if (changeInfo.status === 'complete' && tab.url && tab.url.includes('about:blank')) {
+    console.log(`Detected about:blank page at ${tab.url}, injecting beautifier`);
+    
+    // Small delay to ensure page is fully loaded
+    setTimeout(() => {
+      chrome.scripting.executeScript({
+        target: { tabId: tabId },
+        files: ['src/features/jsonBeautifier/JsonBeautifier.js']
+      }).then(() => {
+        console.log('JSON Beautifier script injected successfully');
+      }).catch(error => {
+        console.error('Error injecting script:', error);
+      });
+    }, 200);
+  }
+});
+
+// Add badge to show extension is active
+chrome.action.setBadgeBackgroundColor({ color: '#0651A5' });
+chrome.action.setBadgeText({ text: 'JSON' });
+
 // Setup side panel for all supported browsers
 try {
   // Check if sidePanel API is available

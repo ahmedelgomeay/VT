@@ -9,7 +9,9 @@
     "scripting",
     "activeTab",
     "browsingData",
-    "tabs"
+    "tabs",
+    "contextMenus",
+    "notifications"
   ],
   "background": {
     "service_worker": "background.js"
