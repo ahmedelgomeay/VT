@@ -43,6 +43,14 @@ if (window.voisDomInspectorLoaded) {
                 this.removeOverlayElements();
                 this.removeEventListeners();
                 console.log('VOIS DomInspector deactivated');
+
+                // Notify the extension / background about deactivation so UI can update.
+                const message = { action: 'inspector-deactivated' };
+                if (window.handleDomInspectorMessage) {
+                    window.handleDomInspectorMessage(message);
+                } else if (typeof chrome !== 'undefined' && chrome.runtime) {
+                    chrome.runtime.sendMessage(message);
+                }
             } catch (error) {
                 console.error('Failed to deactivate DomInspector:', error);
             }
@@ -205,84 +213,21 @@ if (window.voisDomInspectorLoaded) {
             event.stopPropagation();
 
             const element = event.target;
-            
             try {
                 console.log('Element inspected:', element);
-                
-                // Set a marker attribute on the element for identification
+
+                // Mark the inspected element for potential downstream tooling.
                 element.setAttribute('shub-ins', 1);
-                
-                // Use the injected script to generate selectors
-                if (window.generateSelectorsForElement) {
-                    console.log('Calling generateSelectorsForElement in content script');
-                    // Call the injected script function to generate selectors
-                    const selectors = window.generateSelectorsForElement(element);
-                    console.log('Generated selectors:', selectors);
-                } else {
-                    console.error('Injected script not found. Falling back to basic selector generation.');
-                    // Fall back to basic selector generation and send the results directly
-                    const selectors = {
-                        css: this.generateCssSelector(element),
-                        xpath: this.generateRelXpath(element),
-                        fullXPath: this.generateAbsXpath(element),
-                        attributes: this.getElementAttributes(element),
-                        elementInfo: {
-                            tagName: element.tagName.toLowerCase(),
-                            id: element.id || '',
-                            className: element.className || '',
-                            text: this.getElementText(element)
-                        }
-                    };
-                    
-                    console.log('Generated basic selectors:', selectors);
-                    
-                    // Send message back to extension
-                    if (window.handleDomInspectorMessage) {
-                        console.log('Sending element-selectors message via handleDomInspectorMessage');
-                        window.handleDomInspectorMessage({
-                            action: 'element-selectors',
-                            selectors: selectors
-                        });
-                    } else {
-                        // Try direct messaging as fallback
-                        console.log('Sending element-selectors message via chrome.runtime.sendMessage');
-                        chrome.runtime.sendMessage({
-                            action: 'element-selectors',
-                            selectors: selectors
-                        });
-                    }
-                }
-                
-                // Deactivate inspector after selection
+
+                // Deactivate inspector immediately after the click.
                 this.deactivate();
-                
-                // Send message to background script that inspector was deactivated
-                if (window.handleDomInspectorMessage) {
-                    console.log('Sending inspector-deactivated message via handleDomInspectorMessage');
-                    window.handleDomInspectorMessage({
-                        action: 'inspector-deactivated'
-                    });
-                } else {
-                    // Try direct messaging as fallback
-                    console.log('Sending inspector-deactivated message via chrome.runtime.sendMessage');
-                    chrome.runtime.sendMessage({
-                        action: 'inspector-deactivated'
-                    });
-                }
             } catch (error) {
                 console.error('Error inspecting element:', error);
-                
-                // Send error message
+                const errorMessage = { action: 'inspector-error', message: 'Error inspecting element: ' + error.message };
                 if (window.handleDomInspectorMessage) {
-                    window.handleDomInspectorMessage({
-                        action: 'inspector-error',
-                        message: 'Error inspecting element: ' + error.message
-                    });
-                } else {
-                    chrome.runtime.sendMessage({
-                        action: 'inspector-error',
-                        message: 'Error inspecting element: ' + error.message
-                    });
+                    window.handleDomInspectorMessage(errorMessage);
+                } else if (typeof chrome !== 'undefined' && chrome.runtime) {
+                    chrome.runtime.sendMessage(errorMessage);
                 }
             }
         }
@@ -477,218 +422,6 @@ if (window.voisDomInspectorLoaded) {
                 }
             }
             return attributes;
-        }
-
-        /**
-         * Generate selectors for the inspected element and send them back to the extension
-         * @param {HTMLElement} element - The DOM element to generate selectors for
-         */
-        generateSelectorsForElement(element) {
-            // Use the bridge function that connects to SelectorHub's injectedScript
-            if (window.generateSelectorsForElement) {
-                try {
-                    // This will call into the injectedScript via the bridge set up in contentScript.js
-                    return window.generateSelectorsForElement(element);
-                } catch (error) {
-                    console.error('Error using SelectorHub to generate selectors:', error);
-                    // Fall back to basic selectors if the SelectorHub script fails
-                    return this.generateBasicSelectors(element);
-                }
-            } else {
-                console.warn('SelectorHub injectedScript not available, using basic selectors');
-                return this.generateBasicSelectors(element);
-            }
-        }
-
-        /**
-         * Generate basic selectors as a fallback if SelectorHub is not available
-         * @param {HTMLElement} element - The DOM element to generate selectors for
-         */
-        generateBasicSelectors(element) {
-            const selectors = {
-                css: this.generateCssSelector(element),
-                xpath: this.generateRelXpath(element),
-                fullXPath: this.generateAbsXpath(element),
-                attributes: this.getElementAttributes(element),
-                elementInfo: {
-                    tagName: element.tagName.toLowerCase(),
-                    id: element.id || '',
-                    className: element.className || '',
-                    name: element.getAttribute('name') || '',
-                    text: this.getElementText(element)
-                }
-            };
-            
-            // Send message back to extension
-            if (window.handleDomInspectorMessage) {
-                window.handleDomInspectorMessage({
-                    action: 'element-selectors',
-                    selectors: selectors
-                });
-            }
-            
-            return selectors;
-        }
-        
-        /**
-         * Generates a CSS selector for an element
-         * @param {HTMLElement} element - The element to generate selector for
-         * @returns {string} - The CSS selector
-         */
-        generateCssSelector(element) {
-            // Start with the element tag
-            let selector = element.tagName.toLowerCase();
-            
-            // Add ID if available
-            if (element.id) {
-                return `#${element.id.trim()}`;
-            }
-            
-            // Add classes if available
-            if (element.className) {
-                const classes = element.className.trim().split(/\s+/);
-                if (classes.length > 0 && classes[0] !== '') {
-                    selector += `.${classes.join('.')}`;
-                }
-            }
-            
-            // If we have a parent element, add nth-child
-            if (element.parentElement) {
-                const siblings = Array.from(element.parentElement.children);
-                const index = siblings.indexOf(element) + 1;
-                selector += `:nth-child(${index})`;
-                
-                // Add parent info for better selector
-                if (element.parentElement.tagName !== 'BODY') {
-                    const parentSelector = this.generateCssSelector(element.parentElement);
-                    selector = `${parentSelector} > ${selector}`;
-                }
-            }
-            
-            return selector;
-        }
-        
-        /**
-         * Generates a relative XPath for an element
-         * @param {HTMLElement} element - The element to generate XPath for
-         * @returns {string} - The relative XPath
-         */
-        generateRelXpath(element) {
-            // If element has ID, use it for simple XPath
-            if (element.id) {
-                return `//*[@id="${element.id}"]`;
-            }
-            
-            // Use text content for elements like buttons, links, and headers
-            const tagName = element.tagName.toLowerCase();
-            const text = this.getElementText(element).trim();
-            
-            if (text && (tagName === 'a' || tagName === 'button' || tagName === 'h1' || 
-                tagName === 'h2' || tagName === 'h3' || tagName === 'h4' || 
-                tagName === 'h5' || tagName === 'h6' || tagName === 'label')) {
-                const textXpath = `//${tagName}[text()="${text}"]`;
-                if (this.evaluateXpath(textXpath) === 1) {
-                    return textXpath;
-                }
-            }
-            
-            // Try with attributes
-            for (const attr of ['name', 'placeholder', 'title', 'aria-label', 'data-testid']) {
-                if (element.hasAttribute(attr)) {
-                    const value = element.getAttribute(attr);
-                    const attrXpath = `//${tagName}[@${attr}="${value}"]`;
-                    if (this.evaluateXpath(attrXpath) === 1) {
-                        return attrXpath;
-                    }
-                }
-            }
-            
-            // Use more complex path with parent elements
-            return this.buildXpathWithParents(element);
-        }
-        
-        /**
-         * Builds an XPath with parent elements
-         * @param {HTMLElement} element - The element to build XPath for
-         * @returns {string} - The XPath with parent context
-         */
-        buildXpathWithParents(element) {
-            if (element.tagName === 'HTML') {
-                return '/html';
-            }
-            
-            if (element.tagName === 'BODY') {
-                return '/html/body';
-            }
-            
-            // Count siblings with same tag
-            let count = 1;
-            let sibling = element.previousElementSibling;
-            
-            while (sibling) {
-                if (sibling.tagName === element.tagName) {
-                    count++;
-                }
-                sibling = sibling.previousElementSibling;
-            }
-            
-            // Build path with parent
-            const tagName = element.tagName.toLowerCase();
-            return `${this.buildXpathWithParents(element.parentElement)}/${tagName}[${count}]`;
-        }
-        
-        /**
-         * Generates an absolute XPath for an element
-         * @param {HTMLElement} element - The element to generate XPath for
-         * @returns {string} - The absolute XPath
-         */
-        generateAbsXpath(element) {
-            if (element.tagName === 'HTML') {
-                return '/html[1]';
-            }
-            
-            if (element.tagName === 'BODY') {
-                return '/html[1]/body[1]';
-            }
-            
-            let siblingCount = 0;
-            const siblings = element.parentNode.childNodes;
-            
-            for (let i = 0; i < siblings.length; i++) {
-                const sibling = siblings[i];
-                
-                if (sibling === element) {
-                    const path = this.generateAbsXpath(element.parentNode) + '/' + 
-                                 element.tagName.toLowerCase() + '[' + (siblingCount + 1) + ']';
-                    return path;
-                }
-                
-                if (sibling.nodeType === 1 && sibling.tagName.toLowerCase() === element.tagName.toLowerCase()) {
-                    siblingCount++;
-                }
-            }
-            
-            return ''; // This should not happen
-        }
-        
-        /**
-         * Evaluates an XPath and returns the number of matching elements
-         * @param {string} xpath - The XPath to evaluate
-         * @returns {number} - The number of matching elements
-         */
-        evaluateXpath(xpath) {
-            try {
-                return document.evaluate(
-                    xpath, 
-                    document, 
-                    null, 
-                    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, 
-                    null
-                ).snapshotLength;
-            } catch (error) {
-                console.error('Error evaluating XPath:', error);
-                return 0;
-            }
         }
     }
 

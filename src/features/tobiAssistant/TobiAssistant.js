@@ -1149,11 +1149,6 @@ class TobiAssistant {
                     inspectButton.title = 'Stop Highlighting';
                 }
                 sendResponse({success: true});
-            } else if (message.action === "element-selectors") {
-                // Handle the selectors from the inspected element
-                console.log('Received element-selectors message:', message.selectors);
-                this.displayElementSelectors(message.selectors);
-                sendResponse({success: true});
             } else if (message.action === "inspector-error") {
                 // Handle inspector errors
                 console.error('Inspector error:', message.message);
@@ -1162,67 +1157,6 @@ class TobiAssistant {
             }
             return true;
         });
-    }
-    
-    displayElementSelectors(selectors) {
-        if (!selectors) {
-            this.addBotMessage(TobiMessages.inspector.elementFailure);
-            return;
-        }
-
-        console.log('Displaying selectors:', selectors);
-        
-        // Create a nicely formatted message with the selectors
-        let html = '<div class="selector-result">';
-        
-        // Add element info header
-        const info = selectors.elementInfo || {};
-        html += `<h3>Element: ${info.tagName || 'unknown'}</h3>`;
-        
-        // Show basic element info
-        html += '<div class="element-info">';
-        if (info.id) html += `id="${this.escapeHTML(info.id)}" `;
-        if (info.className) html += `class="${this.escapeHTML(info.className)}" `;
-        if (info.name) html += `name="${this.escapeHTML(info.name)}" `;
-        html += '</div>';
-        
-        // Show element text if available
-        if (info.text) {
-            html += `<div class="element-text">Text: "${this.escapeHTML(info.text)}"</div>`;
-        }
-        
-        // Show generated selectors
-        html += '<div class="selector-list">';
-        
-        // CSS selector
-        if (selectors.css) {
-            html += `<div class="selector-item">
-                <strong>CSS Selector:</strong>
-                <code>${this.escapeHTML(selectors.css)}</code>
-            </div>`;
-        }
-        
-        // XPath selector
-        if (selectors.xpath) {
-            html += `<div class="selector-item">
-                <strong>XPath:</strong>
-                <code>${this.escapeHTML(selectors.xpath)}</code>
-            </div>`;
-        }
-        
-        // Full XPath (absolute)
-        if (selectors.fullXPath) {
-            html += `<div class="selector-item">
-                <strong>Full XPath:</strong>
-                <code>${this.escapeHTML(typeof selectors.fullXPath === 'string' ? selectors.fullXPath : '//*')}</code>
-            </div>`;
-        }
-        
-        html += '</div>'; // Close selector-list
-        html += '</div>'; // Close selector-result
-        
-        // Add the message as raw HTML
-        this.addBotMessage(html);
     }
 }
 
