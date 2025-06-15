@@ -280,6 +280,9 @@ class TobiAssistant {
                 const content = button.getAttribute('data-content');
                 
                 if (content) {
+                    // Store the original button content
+                    const originalButtonHTML = button.innerHTML;
+                    
                     // Add click effect
                     button.style.transform = 'scale(0.95)';
                     setTimeout(() => {
@@ -289,24 +292,22 @@ class TobiAssistant {
                     // Copy to clipboard
                     navigator.clipboard.writeText(content).then(() => {
                         // Show copied feedback
-                        const originalText = button.innerHTML;
                         button.innerHTML = '<i class="fas fa-check"></i> Copied!';
                         button.classList.add('copied');
                         
                         // Reset after 2 seconds
                         setTimeout(() => {
-                            button.innerHTML = originalText;
+                            button.innerHTML = originalButtonHTML;
                             button.classList.remove('copied');
                         }, 2000);
                     }).catch(err => {
                         console.error('Failed to copy: ', err);
                         // Show error feedback
-                        const originalText = button.innerHTML;
                         button.innerHTML = '<i class="fas fa-times"></i> Failed';
                         
                         // Reset after 2 seconds
                         setTimeout(() => {
-                            button.innerHTML = originalText;
+                            button.innerHTML = originalButtonHTML;
                         }, 2000);
                     });
                 }
@@ -1006,35 +1007,38 @@ class TobiAssistant {
                 // Restore conversation in UI
                 this.conversationHistory.forEach(message => {
                     if (message.isCopyable) {
-                        try {
-                            // Try to parse the JSON metadata for copyable content
-                            const copyableData = JSON.parse(message.message);
-                            if (copyableData.type === 'copyable') {
-                                // Recreate the copyable content
-                                const recreatedContent = this.createCopyableResponse(
-                                    copyableData.content, 
-                                    copyableData.title
-                                );
-                                // Add it directly to avoid double-processing
-                                const messageDiv = document.createElement('div');
-                                messageDiv.className = 'tobi-chat-message bot-message';
-                                
-                                const avatarDiv = document.createElement('div');
-                                avatarDiv.className = 'tobi-chat-avatar';
-                                avatarDiv.innerHTML = '<img src="../../assets/icons/tobi-VF.png" alt="TOBi">';
-                                
-                                messageDiv.appendChild(avatarDiv);
-                                messageDiv.innerHTML += recreatedContent;
-                                
-                                if (this.chatMessages) {
-                                    this.chatMessages.appendChild(messageDiv);
+                        // Only attempt to parse if it starts with { (valid JSON)
+                        if (typeof message.message === 'string' && message.message.trim().startsWith('{')) {
+                            try {
+                                const copyableData = JSON.parse(message.message);
+                                if (copyableData.type === 'copyable') {
+                                    // Recreate the copyable content
+                                    const recreatedContent = this.createCopyableResponse(
+                                        copyableData.content, 
+                                        copyableData.title
+                                    );
+                                    // Add it directly to avoid double-processing
+                                    const messageDiv = document.createElement('div');
+                                    messageDiv.className = 'tobi-chat-message bot-message';
+                                    
+                                    const avatarDiv = document.createElement('div');
+                                    avatarDiv.className = 'tobi-chat-avatar';
+                                    avatarDiv.innerHTML = '<img src="../../assets/icons/tobi-VF.png" alt="TOBi">';
+                                    
+                                    messageDiv.appendChild(avatarDiv);
+                                    messageDiv.innerHTML += recreatedContent;
+                                    
+                                    if (this.chatMessages) {
+                                        this.chatMessages.appendChild(messageDiv);
+                                    }
+                                    return;
                                 }
-                                return;
+                            } catch (e) {
+                                // Silent catch - will fall through to HTML handling
+                                console.debug('Message marked as copyable but not in JSON format, treating as HTML');
                             }
-                        } catch (e) {
-                            console.error('Error parsing copyable content:', e);
-                            // If parsing fails, fall back to regular display
                         }
+                        // If not JSON or parsing failed, treat as HTML directly
                     }
                     
                     // Special handling for messages that contain HTML
@@ -1082,46 +1086,48 @@ class TobiAssistant {
         const copyButtons = this.chatMessages.querySelectorAll('.copy-button');
         copyButtons.forEach(button => {
             // Remove existing listeners to avoid duplicates
-            button.replaceWith(button.cloneNode(true));
+            const newButton = button.cloneNode(true);
+            button.replaceWith(newButton);
             
-            // Get the fresh button reference after cloning
-            const freshButton = this.chatMessages.querySelector(`[data-content="${button.getAttribute('data-content')}"]`);
-            if (freshButton) {
-                freshButton.addEventListener('click', (event) => {
-                    const content = freshButton.getAttribute('data-content');
-                    if (content) {
-                        // Add click effect
-                        freshButton.style.transform = 'scale(0.95)';
-                        setTimeout(() => {
-                            freshButton.style.transform = '';
-                        }, 150);
+            // Store the original button content
+            const originalButtonHTML = newButton.innerHTML;
+            
+            // Add event listener directly without using querySelector
+            newButton.addEventListener('click', (event) => {
+                const content = newButton.getAttribute('data-content');
+                if (content) {
+                    // Store the original button content
+                    const originalButtonHTML = newButton.innerHTML;
+                    
+                    // Add click effect
+                    newButton.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        newButton.style.transform = '';
+                    }, 150);
+                    
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(content).then(() => {
+                        // Show copied feedback
+                        newButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                        newButton.classList.add('copied');
                         
-                        // Copy to clipboard
-                        navigator.clipboard.writeText(content).then(() => {
-                            // Show copied feedback
-                            const originalText = freshButton.innerHTML;
-                            freshButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                            freshButton.classList.add('copied');
-                            
-                            // Reset after 2 seconds
-                            setTimeout(() => {
-                                freshButton.innerHTML = originalText;
-                                freshButton.classList.remove('copied');
-                            }, 2000);
-                        }).catch(err => {
-                            console.error('Failed to copy: ', err);
-                            // Show error feedback
-                            const originalText = freshButton.innerHTML;
-                            freshButton.innerHTML = '<i class="fas fa-times"></i> Failed';
-                            
-                            // Reset after 2 seconds
-                            setTimeout(() => {
-                                freshButton.innerHTML = originalText;
-                            }, 2000);
-                        });
-                    }
-                });
-            }
+                        // Reset after 2 seconds
+                        setTimeout(() => {
+                            newButton.innerHTML = originalButtonHTML;
+                            newButton.classList.remove('copied');
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
+                        // Show error feedback
+                        newButton.innerHTML = '<i class="fas fa-times"></i> Failed';
+                        
+                        // Reset after 2 seconds
+                        setTimeout(() => {
+                            newButton.innerHTML = originalButtonHTML;
+                        }, 2000);
+                    });
+                }
+            });
         });
     }
 
