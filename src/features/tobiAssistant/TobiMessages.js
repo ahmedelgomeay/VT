@@ -3,7 +3,7 @@
  * Centralizing messages here makes them easier to maintain and update
  */
 
-const tobiMessages = {
+const TobiMessages = {
     // AI prompt messages shown when chat is opened
     aiPrompts: [
         "Hi I'm TOBi, How can I help you today?",
@@ -46,7 +46,12 @@ const tobiMessages = {
     
     // Logs-related messages
     logs: {
-        Logs_Query: `Test`,
+        Logs_Query: `fetch logs 
+    | filter matchesValue(index, "test") 
+    | filter contains(content,"$conversation_id")
+    | parse content, "JSON:content"
+    | fieldsAdd timestamp = toString(content[timestamp]), payload = toString(content[payload])
+    | parse payload, "JSON:payload"`,
          
     API_Query: `fetch logs 
     | filter matchesValue(index, "test") 
@@ -66,4 +71,4 @@ const tobiMessages = {
       
 };
 
-export default tobiMessages; 
+export default TobiMessages; 

@@ -27,7 +27,7 @@ class TobiAssistant {
         ];
         
         // Use messages from TobiMessages
-        this.aiPrompts = TobiMessages.aiPrompts;
+        this.aiPrompts = TobiMessages.aiPrompts || [];
         
         this.isAnimating = false;
         this.aiMode = false;
@@ -280,6 +280,12 @@ class TobiAssistant {
                 const content = button.getAttribute('data-content');
                 
                 if (content) {
+                    // Add click effect
+                    button.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        button.style.transform = '';
+                    }, 150);
+                    
                     // Copy to clipboard
                     navigator.clipboard.writeText(content).then(() => {
                         // Show copied feedback
@@ -306,6 +312,9 @@ class TobiAssistant {
                 }
             }
         });
+        
+        // Initialize copy button listeners for any pre-existing content
+        this.setupCopyButtonListeners();
         
         // Create chat input area
         const chatInputArea = document.createElement('form');
@@ -447,7 +456,7 @@ class TobiAssistant {
     }
 
     /**
-     * Adds a message from the bot to the chat interface.
+     * Adds a bot message to the chat interface.
      * 
      * @param {string|HTMLElement} message - The message to add
      */
@@ -457,6 +466,51 @@ class TobiAssistant {
             message = this.formatHTMLAsCode(message);
         }
         
+        // Check if message contains copyable content
+        if (typeof message === 'string' && message.includes('copyable-content')) {
+            // For copyable content, add it directly without wrapping in a chat bubble
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'tobi-chat-message bot-message';
+            
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'tobi-chat-avatar';
+            avatarDiv.innerHTML = '<img src="../../assets/icons/tobi-VF.png" alt="TOBi">';
+            
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.innerHTML += message; // Add the copyable content directly
+            
+            if (this.chatMessages) {
+                this.chatMessages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+            
+            // Store the original message content for proper restoration when loading history
+            // Extract title and content from the copyable content
+            const titleMatch = message.match(/<span>(.*?)<\/span>/);
+            const contentMatch = message.match(/data-content="(.*?)"/);
+            
+            let historyMessage = message;
+            if (titleMatch && contentMatch) {
+                // Store metadata about the copyable content for better restoration
+                historyMessage = JSON.stringify({
+                    type: 'copyable',
+                    title: titleMatch[1],
+                    content: this.escapeHTML(decodeURIComponent(contentMatch[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')))
+                });
+            }
+            
+            // Add to conversation history
+            this.conversationHistory.push({
+                sender: 'bot',
+                message: historyMessage,
+                isCopyable: true
+            });
+            this.saveConversationHistory();
+            
+            return;
+        }
+        
+        // For regular messages, use the standard chat bubble
         this.conversationHistory.push({ sender: 'bot', message });
         this.saveConversationHistory();
         this.addMessageToUI('bot', message);
@@ -595,22 +649,16 @@ class TobiAssistant {
     addMessageToUI(sender, message) {
         if (!this.chatMessages) return;
         
-        // Process the message content
-        let processedMessage;
-        
-        // Check if the message is already HTML (starts with <div, <p, etc.)
-        if (typeof message === 'string' && (message.trim().startsWith('<div') || message.trim().startsWith('<h') || message.trim().startsWith('<p'))) {
-            // It's already HTML, don't escape it
-            processedMessage = message;
-        } else {
-            // It's plain text or markdown, render it
-            processedMessage = this.renderMarkdown(message);
-        }
-        
         const messageElement = document.createElement('div');
         messageElement.className = `tobi-chat-message ${sender}-message`;
-
+        
+        // Process message content (handle HTML, markdown, etc.)
+        let processedMessage = message;
+        
         if (sender === 'bot') {
+            // Only render markdown for bot messages
+            processedMessage = this.renderMarkdown(message);
+            
             messageElement.innerHTML = `
                 <div class="tobi-chat-avatar">
                     <img src="../../assets/icons/tobi-VF.png" alt="TOBi">
@@ -618,11 +666,9 @@ class TobiAssistant {
                 <div class="tobi-chat-bubble">${processedMessage}</div>
             `;
         } else {
+            // User message without avatar
             messageElement.innerHTML = `
                 <div class="tobi-chat-bubble">${processedMessage}</div>
-                <div class="tobi-chat-avatar user">
-                    <i class="fas fa-user"></i>
-                </div>
             `;
         }
         
@@ -796,11 +842,11 @@ class TobiAssistant {
     }
 
     /**
-     * Creates a response with a copy button for code-like content.
+     * Creates a copyable content block with a copy button.
      * 
-     * @param {string} content - The content to be copied
-     * @param {string} title - Optional title for the copyable block
-     * @returns {string} - HTML string with the content and copy button
+     * @param {string} content - The content to be made copyable
+     * @param {string} title - The title of the copyable content
+     * @returns {string} - HTML string for the copyable content
      */
     createCopyableResponse(content, title = 'Query') {
         return `<div class="copyable-content">
@@ -810,7 +856,7 @@ class TobiAssistant {
                     <i class="fas fa-copy"></i> Copy
                 </button>
             </div>
-            <pre class="copyable-pre">${this.escapeHTML(content)}</pre>
+            <pre class="copyable-pre"><code>${this.escapeHTML(content)}</code></pre>
         </div>`;
     }
 
@@ -959,9 +1005,122 @@ class TobiAssistant {
                 this.conversationHistory = result[this.storageKey];
                 // Restore conversation in UI
                 this.conversationHistory.forEach(message => {
-                    this.addMessageToUI(message.sender, message.message);
+                    if (message.isCopyable) {
+                        try {
+                            // Try to parse the JSON metadata for copyable content
+                            const copyableData = JSON.parse(message.message);
+                            if (copyableData.type === 'copyable') {
+                                // Recreate the copyable content
+                                const recreatedContent = this.createCopyableResponse(
+                                    copyableData.content, 
+                                    copyableData.title
+                                );
+                                // Add it directly to avoid double-processing
+                                const messageDiv = document.createElement('div');
+                                messageDiv.className = 'tobi-chat-message bot-message';
+                                
+                                const avatarDiv = document.createElement('div');
+                                avatarDiv.className = 'tobi-chat-avatar';
+                                avatarDiv.innerHTML = '<img src="../../assets/icons/tobi-VF.png" alt="TOBi">';
+                                
+                                messageDiv.appendChild(avatarDiv);
+                                messageDiv.innerHTML += recreatedContent;
+                                
+                                if (this.chatMessages) {
+                                    this.chatMessages.appendChild(messageDiv);
+                                }
+                                return;
+                            }
+                        } catch (e) {
+                            console.error('Error parsing copyable content:', e);
+                            // If parsing fails, fall back to regular display
+                        }
+                    }
+                    
+                    // Special handling for messages that contain HTML
+                    if (typeof message.message === 'string' && 
+                        (message.message.includes('<div class="copyable-content">') || 
+                         message.message.includes('<button class="copy-button"'))) {
+                        
+                        // This is likely a copyable content that wasn't properly flagged
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = `tobi-chat-message ${message.sender}-message`;
+                        
+                        if (message.sender === 'bot') {
+                            const avatarDiv = document.createElement('div');
+                            avatarDiv.className = 'tobi-chat-avatar';
+                            avatarDiv.innerHTML = '<img src="../../assets/icons/tobi-VF.png" alt="TOBi">';
+                            messageDiv.appendChild(avatarDiv);
+                        }
+                        
+                        // Use innerHTML to render the HTML properly
+                        messageDiv.innerHTML += message.message;
+                        
+                        if (this.chatMessages) {
+                            this.chatMessages.appendChild(messageDiv);
+                        }
+                    } else {
+                        // For regular messages
+                        this.addMessageToUI(message.sender, message.message);
+                    }
                 });
+                
+                // Ensure all copy buttons have proper event listeners
+                this.setupCopyButtonListeners();
+                
                 this.scrollToBottom();
+            }
+        });
+    }
+    
+    /**
+     * Sets up event listeners for all copy buttons in the chat
+     */
+    setupCopyButtonListeners() {
+        if (!this.chatMessages) return;
+        
+        const copyButtons = this.chatMessages.querySelectorAll('.copy-button');
+        copyButtons.forEach(button => {
+            // Remove existing listeners to avoid duplicates
+            button.replaceWith(button.cloneNode(true));
+            
+            // Get the fresh button reference after cloning
+            const freshButton = this.chatMessages.querySelector(`[data-content="${button.getAttribute('data-content')}"]`);
+            if (freshButton) {
+                freshButton.addEventListener('click', (event) => {
+                    const content = freshButton.getAttribute('data-content');
+                    if (content) {
+                        // Add click effect
+                        freshButton.style.transform = 'scale(0.95)';
+                        setTimeout(() => {
+                            freshButton.style.transform = '';
+                        }, 150);
+                        
+                        // Copy to clipboard
+                        navigator.clipboard.writeText(content).then(() => {
+                            // Show copied feedback
+                            const originalText = freshButton.innerHTML;
+                            freshButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                            freshButton.classList.add('copied');
+                            
+                            // Reset after 2 seconds
+                            setTimeout(() => {
+                                freshButton.innerHTML = originalText;
+                                freshButton.classList.remove('copied');
+                            }, 2000);
+                        }).catch(err => {
+                            console.error('Failed to copy: ', err);
+                            // Show error feedback
+                            const originalText = freshButton.innerHTML;
+                            freshButton.innerHTML = '<i class="fas fa-times"></i> Failed';
+                            
+                            // Reset after 2 seconds
+                            setTimeout(() => {
+                                freshButton.innerHTML = originalText;
+                            }, 2000);
+                        });
+                    }
+                });
             }
         });
     }
